@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import "./scrollbar.scss";
+@import "./animation.scss";
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+:root {
+  --primary-color: rgb(254, 104, 29);
+  --secondary-color: rgb(255, 160, 36);
+  
+  --background-color: rgb(245, 245, 245);
+  --background-color-opacity-10: rgba(245, 245, 245, 0.1);
+  --background-color-opacity-20: rgba(245, 245, 245, 0.2);
+  --background-color-opacity-30: rgba(245, 245, 245, 0.3);
+  --background-color-opacity-40: rgba(245, 245, 245, 0.4);
+  --background-color-opacity-50: rgba(245, 245, 245, 0.5);
+  --background-color-opacity-60: rgba(245, 245, 245, 0.6);
+  --background-color-opacity-70: rgba(245, 245, 245, 0.7);
+  --background-color-opacity-80: rgba(245, 245, 245, 0.8);
+  --background-color-opacity-90: rgba(245, 245, 245, 0.9);
+
+  --foreground-color: rgb(55, 55, 55);
+
+  --text-main-color: rgb(15, 15, 15);
+  --text-sub-color: rgb(45, 45, 45);
+  --text-inverse-color: rgb(245, 245, 245);
+
+  --gray-1: rgb(75, 75, 75);
+  --gray-2: rgb(95, 95, 95);
+  --gray-3: rgb(115, 115, 115);
+  --gray-4: rgb(135, 135, 135);
+  --gray-5: rgb(155, 155, 155);
+  --gray-6: rgb(175, 175, 175);
+  --gray-7: rgb(195, 195, 195);
+  --gray-8: rgb(215, 215, 215);
+  --gray-9: rgb(235, 235, 235);
+  --gray-10: rgb(240, 240, 240);
+}
+
+// .dark {
+//   --primary-color: #FE3B61;
+//   --secondary-color: #EC458D;
+//   --tertiary-color: #D451FF;
+//   --quaternary-color: #6147FF;
+//   --quinary-color: #3D1DFF;
+
+//   --background-color: rgb(20, 20, 20);
+//   --foreground-color: rgb(200, 200, 200);
+
+//   --text-main-color: rgb(245, 245, 245);
+//   --text-sub-color: rgb(226, 226, 226);
+//   --text-inverse-color: rgb(15, 15, 15);
+
+//   --gray-1: rgb(180, 180, 180);
+//   --gray-2: rgb(160, 160, 160);
+//   --gray-3: rgb(140, 140, 140);
+//   --gray-4: rgb(120, 120, 120);
+//   --gray-5: rgb(100, 100, 100);
+//   --gray-6: rgb(80, 80, 80);
+//   --gray-7: rgb(60, 60, 60);
+//   --gray-8: rgb(45, 45, 45);
+//   --gray-9: rgb(27, 27, 27);
+// }
+
+@theme inline {
+  --color-primary: var(--primary-color);
+  --color-secondary: var(--secondary-color);
+
+  --color-background: var(--background-color);
+  --color-background-10: var(--background-color-opacity-10);
+  --color-background-20: var(--background-color-opacity-20);
+  --color-background-30: var(--background-color-opacity-30);
+  --color-background-40: var(--background-color-opacity-40);
+  --color-background-50: var(--background-color-opacity-50);
+  --color-background-60: var(--background-color-opacity-60);
+  --color-background-70: var(--background-color-opacity-70);
+  --color-background-80: var(--background-color-opacity-80);
+  --color-background-90: var(--background-color-opacity-90);
+
+  --color-foreground: var(--foreground-color);
+
+  --color-main: var(--text-main-color);
+  --color-sub: var(--text-sub-color);
+  --color-inverse: var(--text-inverse-color);
+
+  --color-accent-1: var(--primary-color);
+  --color-accent-2: var(--secondary-color);
+  --color-accent-3: var(--tertiary-color);
+  --color-accent-4: var(--quaternary-color);
+  --color-accent-5: var(--quinary-color);
+
+  --color-gray1: var(--gray-1);
+  --color-gray2: var(--gray-2);
+  --color-gray3: var(--gray-3);
+  --color-gray4: var(--gray-4);
+  --color-gray5: var(--gray-5);
+  --color-gray6: var(--gray-6);
+  --color-gray7: var(--gray-7);
+  --color-gray8: var(--gray-8);
+  --color-gray9: var(--gray-9);
+  --color-gray10: var(--gray-10);
+}

@@ -1,0 +1,45 @@
+// 스크롤바 기본 변수
+$scrollbar-size: 16px;
+$scrollbar-size-min: 44px;
+$scrollbar-color: var(--border);
+
+@layer base {
+  * {
+    --scrollbar-size: #{$scrollbar-size};
+    --scrollbar-size-min: #{$scrollbar-size-min};
+    --scrollbar-color: #{$scrollbar-color};
+    /* firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-color) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  // 웹킷 스크롤바 스타일링
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: var(--scrollbar-size-min);
+    min-width: var(--scrollbar-size-min);
+    background-color: var(--scrollbar-color);
+    border-radius: var(--scrollbar-size);
+    background-clip: padding-box;
+    
+    &:active {
+      --scrollbar-color: var(--border);
+    }
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  // 불필요한 스크롤바 요소 숨기기
+  ::-webkit-scrollbar-button,
+  ::-webkit-scrollbar-corner,
+  ::-webkit-resizer {
+    display: none;
+  }
+}

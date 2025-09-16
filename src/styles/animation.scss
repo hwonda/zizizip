@@ -1,0 +1,154 @@
+// 애니메이션 변수
+$fade-duration: 1s;
+$slide-duration: 0.7s;
+$gradient-duration: 0.5s;
+$bounce-duration: 1.5s;
+$gauge-duration: 0.8s;
+
+// 애니메이션 지연 변수
+$delays: (
+  100: 100ms,
+  300: 300ms,
+  500: 500ms,
+  700: 700ms,
+  900: 900ms
+);
+
+// 애니메이션 정의
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes gradientRiseUp {
+  from {
+    background-position: 0% 100%;
+  }
+  to {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes staggeredBounce {
+  0%, 100% { 
+    transform: translateY(0); 
+    opacity: 0.5; 
+  }
+  40% { 
+    transform: translateY(5px); 
+    opacity: 0.7; 
+  }
+  60% { 
+    transform: translateY(5px); 
+    opacity: 1; 
+  }
+}
+
+@keyframes fillGauge {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--gauge-width, 100%);
+  }
+}
+
+// 애니메이션 미스인
+%base-animation {
+  animation-fill-mode: forwards;
+  animation-timing-function: ease;
+}
+
+// 커스텀 애니메이션 클래스
+.animate-fade-in {
+  @extend %base-animation;
+  animation-name: fadeIn;
+  animation-duration: $fade-duration;
+}
+
+.animate-intro {
+  @extend %base-animation;
+  opacity: 0;
+  transform: translateY(1rem);
+  animation-name: slideUp;
+  animation-duration: $slide-duration;
+}
+
+.animate-intro-next {
+  @extend .animate-intro;
+  animation-delay: map-get($delays, 500);
+}
+
+// 애니메이션 딜레이 클래스
+@each $name, $time in $delays {
+  .delay-#{$name} {
+    animation-delay: $time;
+  }
+}
+
+// 특수 애니메이션
+%bounce-animation {
+  animation-name: staggeredBounce;
+  animation-duration: $bounce-duration;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.animate-bounceArrow1 {
+  @extend %bounce-animation;
+}
+
+.animate-bounceArrow2 {
+  @extend %bounce-animation;
+  animation-delay: 0.2s;
+}
+
+.animate-fill-gauge {
+  width: 0;
+  animation: fillGauge $gauge-duration ease-in-out forwards;
+  animation-play-state: paused;
+  
+  .group:hover & {
+    animation-play-state: running;
+  }
+}
+
+// 그라데이션 애니메이션
+$transition-duration: 0.3s;
+
+.animate-gradient-rise {
+  position: relative;
+  transition: all $transition-duration ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, var(--color-accent-1), var(--color-accent-5));
+    background-size: 100% 200%;
+    background-position: 0% 100%;
+    opacity: 0;
+    transition: opacity $transition-duration ease;
+    z-index: -1;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+    animation: gradientRiseUp $gradient-duration ease forwards;
+  }
+}
