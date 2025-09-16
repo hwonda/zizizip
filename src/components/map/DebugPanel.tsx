@@ -15,7 +15,7 @@ export default function DebugPanel({ show, map, locations }: DebugPanelProps) {
   const validLocationsCount = locations.filter((loc) => loc.lat && loc.lon).length;
 
   return (
-    <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-20 max-w-md max-h-96 overflow-auto">
+    <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-20 max-w-md max-h-screen overflow-auto">
       <h3 className="font-bold text-lg mb-2">{'디버그 정보'}</h3>
 
       <div className="mb-3">
