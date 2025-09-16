@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { LocationData } from '@/types';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -13,15 +12,14 @@ import { defaults as defaultControls } from 'ol/control';
 import 'ol/ol.css';
 
 interface MapViewProps {
-  locations: LocationData[];
   onMapInitialized: (map: Map, vectorSource: VectorSource)=> void;
 }
 
-export default function MapView({ locations, onMapInitialized }: MapViewProps) {
+export default function MapView({ onMapInitialized }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
-  // 지도 초기화
+  // 지도 초기화 (한 번만 실행)
   useEffect(() => {
     console.log('지도 초기화 useEffect 실행');
     if (!mapRef.current) {
@@ -76,6 +74,24 @@ export default function MapView({ locations, onMapInitialized }: MapViewProps) {
       map.dispose();
       mapInstanceRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 의존성 배열을 비워서 한 번만 실행되도록 수정
+
+  // onMapInitialized 함수 변경 시 별도 처리
+  useEffect(() => {
+    if (mapInstanceRef.current && onMapInitialized) {
+      // 지도가 이미 초기화되어 있으면 벡터 소스를 찾아서 콜백 실행
+      const layers = mapInstanceRef.current.getLayers().getArray();
+      const vectorLayer = layers.find((layer) => layer instanceof VectorLayer) as VectorLayer<VectorSource>;
+
+      if (vectorLayer) {
+        const vectorSource = vectorLayer.getSource();
+        if (vectorSource) {
+          console.log('기존 지도에 대해 onMapInitialized 콜백 실행');
+          onMapInitialized(mapInstanceRef.current, vectorSource);
+        }
+      }
+    }
   }, [onMapInitialized]);
 
   return <div ref={mapRef} className="w-full h-full" />;
