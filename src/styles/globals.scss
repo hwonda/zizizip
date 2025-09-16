@@ -1,9 +1,13 @@
+@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/variable/pretendardvariable.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
 @import "tailwindcss";
 @import "./scrollbar.scss";
 @import "./animation.scss";
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-pretendard), var(--font-suit), var(--font-noto);
 }
 
 button {
@@ -41,32 +45,43 @@ button {
   --gray-8: rgb(215, 215, 215);
   --gray-9: rgb(235, 235, 235);
   --gray-10: rgb(240, 240, 240);
+
+  --font-suit: 'Suit', sans-serif;
+  --font-pretendard: 'Pretendard Variable', sans-serif;
+  --font-noto: 'Noto Sans KR', sans-serif;
 }
 
-// .dark {
-//   --primary-color: #FE3B61;
-//   --secondary-color: #EC458D;
-//   --tertiary-color: #D451FF;
-//   --quaternary-color: #6147FF;
-//   --quinary-color: #3D1DFF;
+.dark {
+  --primary-color: #FE3B61;
+  --secondary-color: #EC458D;
 
-//   --background-color: rgb(20, 20, 20);
-//   --foreground-color: rgb(200, 200, 200);
+  --background-color: rgb(20, 20, 20);
+  --background-color-opacity-10: rgba(20, 20, 20, 0.1);
+  --background-color-opacity-20: rgba(20, 20, 20, 0.2);
+  --background-color-opacity-30: rgba(20, 20, 20, 0.3);
+  --background-color-opacity-40: rgba(20, 20, 20, 0.4);
+  --background-color-opacity-50: rgba(20, 20, 20, 0.5);
+  --background-color-opacity-60: rgba(20, 20, 20, 0.6);
+  --background-color-opacity-70: rgba(20, 20, 20, 0.7);
+  --background-color-opacity-80: rgba(20, 20, 20, 0.8);
+  --background-color-opacity-90: rgba(20, 20, 20, 0.9);
+  --foreground-color: rgb(200, 200, 200);
 
-//   --text-main-color: rgb(245, 245, 245);
-//   --text-sub-color: rgb(226, 226, 226);
-//   --text-inverse-color: rgb(15, 15, 15);
+  --text-main-color: rgb(245, 245, 245);
+  --text-sub-color: rgb(226, 226, 226);
+  --text-inverse-color: rgb(15, 15, 15);
 
-//   --gray-1: rgb(180, 180, 180);
-//   --gray-2: rgb(160, 160, 160);
-//   --gray-3: rgb(140, 140, 140);
-//   --gray-4: rgb(120, 120, 120);
-//   --gray-5: rgb(100, 100, 100);
-//   --gray-6: rgb(80, 80, 80);
-//   --gray-7: rgb(60, 60, 60);
-//   --gray-8: rgb(45, 45, 45);
-//   --gray-9: rgb(27, 27, 27);
-// }
+  --gray-1: rgb(180, 180, 180);
+  --gray-2: rgb(160, 160, 160);
+  --gray-3: rgb(140, 140, 140);
+  --gray-4: rgb(120, 120, 120);
+  --gray-5: rgb(100, 100, 100);
+  --gray-6: rgb(80, 80, 80);
+  --gray-7: rgb(60, 60, 60);
+  --gray-8: rgb(45, 45, 45);
+  --gray-9: rgb(27, 27, 27);
+  --gray-10: rgb(240, 240, 240);
+}
 
 @theme inline {
   --color-primary: var(--primary-color);
@@ -95,14 +110,18 @@ button {
   --color-accent-4: var(--quaternary-color);
   --color-accent-5: var(--quinary-color);
 
-  --color-gray1: var(--gray-1);
-  --color-gray2: var(--gray-2);
-  --color-gray3: var(--gray-3);
-  --color-gray4: var(--gray-4);
-  --color-gray5: var(--gray-5);
-  --color-gray6: var(--gray-6);
-  --color-gray7: var(--gray-7);
-  --color-gray8: var(--gray-8);
-  --color-gray9: var(--gray-9);
-  --color-gray10: var(--gray-10);
+  --color-gray-1: var(--gray-1);
+  --color-gray-2: var(--gray-2);
+  --color-gray-3: var(--gray-3);
+  --color-gray-4: var(--gray-4);
+  --color-gray-5: var(--gray-5);
+  --color-gray-6: var(--gray-6);
+  --color-gray-7: var(--gray-7);
+  --color-gray-8: var(--gray-8);
+  --color-gray-9: var(--gray-9);
+  --color-gray-10: var(--gray-10);
+
+  --font-suit: var(--font-suit);
+  --font-pretendard: var(--font-pretendard);
+  --font-noto: var(--font-noto);
 }
