@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { LocationData } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
@@ -26,16 +26,17 @@ export default function MapPage() {
   const [locations, setLocations] = useState<LocationData[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
 
-  // 지도 초기화 핸들러
-  const handleMapInitialized = (map: Map, vectorSource: VectorSource) => {
+  // 지도 초기화 핸들러 (useCallback으로 메모이제이션)
+  const handleMapInitialized = useCallback((map: Map, vectorSource: VectorSource) => {
     mapRef.current = map;
     vectorSourceRef.current = vectorSource;
-  };
+  }, []);
 
-  // 데이터 업로드 핸들러
-  const handleDataUploaded = (data: LocationData[]) => {
+  // 데이터 업로드 핸들러 (useCallback으로 메모이제이션)
+  const handleDataUploaded = useCallback((data: LocationData[]) => {
+    console.log('MapPage에서 데이터 업로드됨:', data);
     setLocations(data);
-  };
+  }, []);
 
   return (
     <>
@@ -48,7 +49,6 @@ export default function MapPage() {
 
       <MapContainer onDataUploaded={handleDataUploaded}>
         <MapView
-          locations={locations}
           onMapInitialized={handleMapInitialized}
         />
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { LocationData } from '@/types';
 import UploadSidebar from '@/components/UploadSidebar';
 
@@ -15,8 +15,8 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // 위치 데이터 로드 함수
-  const loadLocationData = () => {
+  // 위치 데이터 로드 함수 (useCallback으로 메모이제이션)
+  const loadLocationData = useCallback(() => {
     console.log('위치 데이터 로드 시도 중...');
     try {
       const storedData = sessionStorage.getItem('locationData');
@@ -46,7 +46,7 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
       setError(err instanceof Error ? err : new Error('데이터 로드 오류'));
       setIsLoading(false);
     }
-  };
+  }, [onDataUploaded]);
 
   // 세션 스토리지에서 위치 데이터 로드
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
     return () => {
       window.removeEventListener('locationDataUpdated', handleLocationDataUpdated);
     };
-  }, [onDataUploaded]);
+  }, [loadLocationData, onDataUploaded]);
 
   return (
     <div className="h-screen flex flex-col">

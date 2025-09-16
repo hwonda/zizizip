@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { LocationData } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
@@ -26,8 +26,10 @@ export default function MarkerManager({
   showAllMarkers,
   onMarkerClick,
 }: MarkerManagerProps) {
-  // 마커 스타일 생성 함수
-  const createMarkerStyle = (feature: FeatureLike) => {
+  // 이전 locations 데이터를 저장하여 불필요한 업데이트 방지
+  const prevLocationsRef = useRef<LocationData[]>([]);
+  // 마커 스타일 생성 함수 (useCallback으로 메모이제이션)
+  const createMarkerStyle = useCallback((feature: FeatureLike) => {
     const price = feature.get('price') as number;
 
     // 가격에 따른 마커 스타일 변경
@@ -49,19 +51,52 @@ export default function MarkerManager({
         stroke: new Stroke({ color: '#fff', width: 3 }),
       }),
     });
-  };
+  }, []);
 
-  // 마커 업데이트
+  // 위치 데이터가 실제로 변경되었는지 확인
+  const locationsChanged = useCallback((newLocations: LocationData[], prevLocations: LocationData[]) => {
+    if (newLocations.length !== prevLocations.length) return true;
+
+    return newLocations.some((newLoc, index) => {
+      const prevLoc = prevLocations[index];
+      return !prevLoc
+        || newLoc.name !== prevLoc.name
+        || newLoc.lat !== prevLoc.lat
+        || newLoc.lon !== prevLoc.lon
+        || newLoc.price !== prevLoc.price;
+    });
+  }, []);
+
+  // 마커 업데이트 (데이터가 실제로 변경되었을 때만 실행)
   useEffect(() => {
     console.log('마커 업데이트 useEffect 실행됨');
+    console.log('전달받은 props:', {
+      map: !!map,
+      vectorSource: !!vectorSource,
+      locationsLength: locations?.length || 0,
+      showAllMarkers,
+    });
 
     if (!map || !vectorSource) {
       console.warn('지도 또는 벡터 소스가 초기화되지 않았습니다.');
+      console.warn('map:', map);
+      console.warn('vectorSource:', vectorSource);
       return;
     }
 
     if (!locations || locations.length === 0) {
-      console.warn('위치 데이터가 없습니다.');
+      // 데이터가 없으면 기존 마커만 제거
+      if (vectorSource.getFeatures().length > 0) {
+        console.log('위치 데이터가 없어서 기존 마커 제거');
+        vectorSource.clear();
+      }
+      prevLocationsRef.current = [];
+      return;
+    }
+
+    // 데이터가 변경되지 않았으면 마커 업데이트 건너뛰기
+    if (!locationsChanged(locations, prevLocationsRef.current)) {
+      console.log('위치 데이터가 변경되지 않았으므로 마커 업데이트 건너뜀');
       return;
     }
 
@@ -77,6 +112,7 @@ export default function MarkerManager({
 
     if (validLocations.length === 0) {
       console.warn('유효한 좌표가 있는 위치 데이터가 없습니다.');
+      prevLocationsRef.current = [...locations];
       return;
     }
 
@@ -86,7 +122,6 @@ export default function MarkerManager({
       if (location.lon && location.lat) {
         try {
           const coordinates = fromLonLat([location.lon, location.lat]);
-          console.log(`마커 ${ index + 1 } 좌표 변환: [${ location.lon }, ${ location.lat }] => [${ coordinates[0].toFixed(2) }, ${ coordinates[1].toFixed(2) }]`);
 
           const feature = new Feature({
             geometry: new Point(coordinates),
@@ -97,7 +132,6 @@ export default function MarkerManager({
 
           // 스타일 설정
           feature.setStyle(createMarkerStyle(feature));
-
           vectorSource.addFeature(feature);
         } catch (err) {
           console.error(`마커 ${ index + 1 } 생성 중 오류:`, err);
@@ -110,18 +144,17 @@ export default function MarkerManager({
     // 지도 뷰 조정
     if (validLocations.length > 0) {
       try {
-        console.log('지도 뷰 조정 중...');
         const extent = vectorSource.getExtent();
-        console.log(`지도 뷰 범위: [${ extent[0].toFixed(2) }, ${ extent[1].toFixed(2) }, ${ extent[2].toFixed(2) }, ${ extent[3].toFixed(2) }]`);
         map.getView().fit(extent, { padding: [100, 100, 100, 100], maxZoom: 15 });
-        console.log('지도 뷰 조정 완료');
       } catch (err) {
         console.error('지도 뷰 조정 중 오류:', err);
       }
     }
 
+    // 이전 데이터 저장
+    prevLocationsRef.current = [...locations];
     console.log('마커 업데이트 완료');
-  }, [map, vectorSource, locations]);
+  }, [map, vectorSource, locations, createMarkerStyle, locationsChanged, showAllMarkers]);
 
   // 마커 표시/숨김 토글
   useEffect(() => {
