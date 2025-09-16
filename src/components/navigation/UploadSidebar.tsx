@@ -102,7 +102,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   };
 
   return (
-    <div className="bg-white p-4 shadow-md h-full overflow-auto">
+    <div className="h-full overflow-auto">
       <h2 className="text-xl font-bold mb-4 text-black">{'CSV 파일 업로드'}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">

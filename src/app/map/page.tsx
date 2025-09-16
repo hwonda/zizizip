@@ -6,8 +6,9 @@ import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 
 // 컴포넌트 임포트
+import NavigationWrapper from '@/components/navigation/NavigationWrapper';
+
 import MapContainer from '@/components/map/MapContainer';
-import MapHeader from '@/components/navigation/MapHeader';
 import MapView from '@/components/map/MapView';
 import MarkerManager from '@/components/map/MarkerManager';
 import PopupOverlay from '@/components/map/PopupOverlay';
@@ -40,37 +41,43 @@ export default function MapPage() {
 
   return (
     <>
-      <MapHeader
+      <NavigationWrapper
         showAllMarkers={showAllMarkers}
         showDebugInfo={showDebugInfo}
         onToggleMarkers={() => setShowAllMarkers(!showAllMarkers)}
         onToggleDebugInfo={() => setShowDebugInfo(!showDebugInfo)}
+        onDataUploaded={handleDataUploaded}
       />
 
-      <MapContainer onDataUploaded={handleDataUploaded}>
-        <MapView
-          onMapInitialized={handleMapInitialized}
-        />
+      <div className="h-screen flex flex-col">
+        {/* 지도 영역 */}
+        <div className="flex-1 relative">
+          <MapContainer onDataUploaded={handleDataUploaded}>
+            <MapView
+              onMapInitialized={handleMapInitialized}
+            />
 
-        <MarkerManager
-          map={mapRef.current}
-          vectorSource={vectorSourceRef.current}
-          locations={locations}
-          showAllMarkers={showAllMarkers}
-          onMarkerClick={setSelectedLocation}
-        />
+            <MarkerManager
+              map={mapRef.current}
+              vectorSource={vectorSourceRef.current}
+              locations={locations}
+              showAllMarkers={showAllMarkers}
+              onMarkerClick={setSelectedLocation}
+            />
 
-        <PopupOverlay
-          map={mapRef.current}
-          selectedLocation={selectedLocation}
-        />
+            <PopupOverlay
+              map={mapRef.current}
+              selectedLocation={selectedLocation}
+            />
 
-        <DebugPanel
-          show={showDebugInfo}
-          map={mapRef.current}
-          locations={locations}
-        />
-      </MapContainer>
+            <DebugPanel
+              show={showDebugInfo}
+              map={mapRef.current}
+              locations={locations}
+            />
+          </MapContainer>
+        </div>
+      </div>
     </>
   );
 }

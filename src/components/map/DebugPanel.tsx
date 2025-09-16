@@ -30,10 +30,10 @@ export default function DebugPanel({ show, map, locations }: DebugPanelProps) {
       </div>
 
       <div>
-        <h4 className="font-semibold text-sm mb-1">{'첫 번째 위치 데이터'}</h4>
+        <h4 className="font-semibold text-sm mb-1">{'위치 데이터'}</h4>
         {locations.length > 0 ? (
           <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-            {JSON.stringify(locations[0], null, 2)}
+            {JSON.stringify(locations, null, 2)}
           </pre>
         ) : (
           <p className="text-xs text-red-500">{'데이터 없음'}</p>
