@@ -7,7 +7,7 @@ import VectorSource from 'ol/source/Vector';
 
 // 컴포넌트 임포트
 import MapContainer from '@/components/map/MapContainer';
-import MapHeader from '@/components/map/MapHeader';
+import MapHeader from '@/components/navigation/MapHeader';
 import MapView from '@/components/map/MapView';
 import MarkerManager from '@/components/map/MarkerManager';
 import PopupOverlay from '@/components/map/PopupOverlay';

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { LocationData } from '@/types';
-import UploadSidebar from '@/components/UploadSidebar';
+import UploadSidebar from '@/components/navigation/UploadSidebar';
 
 interface MapContainerProps {
   children: React.ReactNode;
