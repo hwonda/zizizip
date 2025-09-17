@@ -35,7 +35,7 @@ class SimpleCache {
 const geocodeCache = new SimpleCache();
 
 // 레이트 리밋 설정
-const RATE_LIMIT = 5; // 초당 최대 요청 수
+const RATE_LIMIT = 20; // 초당 최대 요청 수
 const RATE_WINDOW = 1000; // 1초 (밀리초 단위)
 let requestTimestamps: number[] = [];
 
@@ -70,7 +70,28 @@ function refineAddress(address: string): string {
   refined = refined.replace(/(\d+)번지/g, '$1');
   refined = refined.replace(/(\d+)번길/g, '$1번길');
 
-  // 특수문자 처리
+  // 구주소(지번 주소) 형식 정제
+  // 동, 가 뒤에 숫자-숫자 형식이 오는 경우 (예: 우이동 18-40)
+  refined = refined.replace(/([가-힣]동|[가-힣]가|[가-힣]리)\s+(\d+)[-](\d+)/g, '$1 $2-$3');
+
+  // 행정구역 표기 정규화 (서울시 -> 서울특별시, 경기도 -> 경기도 등)
+  refined = refined.replace(/서울시/g, '서울특별시');
+  refined = refined.replace(/\b서울\b(?!\s*특별시)/g, '서울특별시');
+  refined = refined.replace(/부산시/g, '부산광역시');
+  refined = refined.replace(/\b부산\b(?!\s*광역시)/g, '부산광역시');
+  refined = refined.replace(/대구시/g, '대구광역시');
+  refined = refined.replace(/\b대구\b(?!\s*광역시)/g, '대구광역시');
+  refined = refined.replace(/인천시/g, '인천광역시');
+  refined = refined.replace(/\b인천\b(?!\s*광역시)/g, '인천광역시');
+  refined = refined.replace(/광주시(?!도)/g, '광주광역시'); // '경기도 광주시'와 구분하기 위한 부정형 전방탐색
+  refined = refined.replace(/\b광주\b(?!\s*광역시)(?!도)/g, '광주광역시'); // '경기도 광주'와 구분
+  refined = refined.replace(/대전시/g, '대전광역시');
+  refined = refined.replace(/\b대전\b(?!\s*광역시)/g, '대전광역시');
+  refined = refined.replace(/울산시/g, '울산광역시');
+  refined = refined.replace(/\b울산\b(?!\s*광역시)/g, '울산광역시');
+  refined = refined.replace(/세종시/g, '세종특별자치시');
+  refined = refined.replace(/\b세종\b(?!\s*특별자치시)/g, '세종특별자치시');
+  // 특수문자 처리 (하이픈은 유지)
   refined = refined.replace(/[^\w\s가-힣\d-]/g, '');
 
   return refined;
@@ -111,18 +132,43 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
 
     console.log(`API 키 확인: ${ apiKey.substring(0, 3) }...`);
 
+    // 지번 주소인지 확인 (동, 가 등의 키워드와 번지 형식 확인)
+    const isJibunAddress = /([가-힣]+(동|가|리))\s+\d+(-\d+)?($|\s)/.test(refinedAddress)
+                          || /([가-힣]+(동|가|리))\s+\d+번지/.test(refinedAddress);
+
     // VWorld 지오코딩 API 호출 - https 사용
-    const url = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=road&key=${ apiKey }`;
+    // 도로명 주소와 지번 주소 모두 처리하기 위해 먼저 지번 주소로 시도
+    const addressType = isJibunAddress ? 'PARCEL' : 'ROAD';
+    const url = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ addressType }&key=${ apiKey }`;
 
-    console.log(`API 요청 URL: ${ url }`);
+    console.log(`API 요청 URL: ${ url } (주소 타입: ${ addressType })`);
 
-    const response = await fetch(url);
+    let response = await fetch(url);
     if (!response.ok) {
       console.error(`API 응답 오류: ${ response.status } ${ response.statusText }`);
       return null;
     }
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // 첫 번째 시도가 실패하면 다른 주소 타입으로 다시 시도
+    if (data.response.status !== 'OK' || !data.response.result) {
+      console.log(`${ addressType } 주소 타입으로 변환 실패, 다른 타입으로 재시도합니다`);
+
+      // 주소 타입 변경 (PARCEL -> ROAD 또는 ROAD -> PARCEL)
+      const alternativeType = addressType === 'PARCEL' ? 'ROAD' : 'PARCEL';
+      const alternativeUrl = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ alternativeType }&key=${ apiKey }`;
+
+      console.log(`대체 API 요청 URL: ${ alternativeUrl } (주소 타입: ${ alternativeType })`);
+
+      response = await fetch(alternativeUrl);
+      if (!response.ok) {
+        console.error(`대체 API 응답 오류: ${ response.status } ${ response.statusText }`);
+        return null;
+      }
+
+      data = await response.json();
+    }
     console.log('API 응답 데이터:', JSON.stringify(data).substring(0, 200) + '...');
 
     // 응답 구조 상세 디버깅
@@ -334,16 +380,14 @@ export async function POST(request: NextRequest) {
                 location.lon = 126.4074;
               } else {
                 // 기본 좌표 (서울시청)
-                location.lat = 37.5666;
-                location.lon = 126.9784;
+                // location.lat = 37.5666;
+                // location.lon = 126.9784;
               }
             }
           } catch (error) {
             console.error(`Error geocoding address ${ address }:`, error);
-
-            // 오류 발생 시에도 테스트용 좌표 할당
-            location.lat = 37.5666;
-            location.lon = 126.9784;
+            // location.lat = 37.5666;
+            // location.lon = 126.9784;
           }
 
           locations.push(location);
