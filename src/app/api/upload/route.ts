@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
 
     // 헤더 확인
     const headers = data[0];
-    if (!headers.includes('name') || !headers.includes('address') || !headers.includes('price')) {
+    if (!headers.includes('이름') || !headers.includes('주소') || !headers.includes('전세')) {
       return NextResponse.json(
         { success: false, error: 'CSV must contain name, address, and price columns' },
         { status: 400 },
@@ -330,9 +330,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 인덱스 찾기
-    const nameIndex = headers.indexOf('name');
-    const addressIndex = headers.indexOf('address');
-    const priceIndex = headers.indexOf('price');
+    const nameIndex = headers.indexOf('이름');
+    const addressIndex = headers.indexOf('주소');
+    const priceIndex = headers.indexOf('전세');
 
     // 데이터 변환 및 지오코딩
     const locations: LocationData[] = [];
