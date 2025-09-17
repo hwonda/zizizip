@@ -1,21 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { LocationData } from '@/types';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { setLocations, setLoading, setError } from '@/store/locationSlice';
 
 interface MapContainerProps {
   children: React.ReactNode;
-  onDataUploaded: (data: LocationData[])=> void;
 }
 
-export default function MapContainer({ children, onDataUploaded }: MapContainerProps) {
-  // 위치 데이터 상태 관리 (setLocations만 사용)
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export default function MapContainer({ children }: MapContainerProps) {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.location);
 
   // 위치 데이터 로드 함수 (useCallback으로 메모이제이션)
   const loadLocationData = useCallback(() => {
     console.log('위치 데이터 로드 시도 중...');
+    dispatch(setLoading(true));
     try {
       const storedData = sessionStorage.getItem('locationData');
       if (storedData) {
@@ -32,17 +33,17 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
         } else {
           console.warn('유효한 좌표가 있는 위치 데이터가 없습니다!');
         }
-        onDataUploaded(parsedData);
+        dispatch(setLocations(parsedData));
       } else {
         console.warn('세션 스토리지에 위치 데이터가 없습니다.');
       }
-      setIsLoading(false);
+      dispatch(setLoading(false));
     } catch (err) {
       console.error('위치 데이터 로드 실패:', err);
-      setError(err instanceof Error ? err : new Error('데이터 로드 오류'));
-      setIsLoading(false);
+      dispatch(setError(err instanceof Error ? err.message : '데이터 로드 오류'));
+      dispatch(setLoading(false));
     }
-  }, [onDataUploaded]);
+  }, [dispatch]);
 
   // 세션 스토리지에서 위치 데이터 로드
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
       const customEvent = event as CustomEvent<LocationData[]>;
       if (customEvent.detail) {
         console.log('새 위치 데이터:', customEvent.detail);
-        onDataUploaded(customEvent.detail);
+        dispatch(setLocations(customEvent.detail));
       } else {
         loadLocationData(); // 이벤트에 데이터가 없으면 세션 스토리지에서 다시 로드
       }
@@ -65,7 +66,7 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
     return () => {
       window.removeEventListener('locationDataUpdated', handleLocationDataUpdated);
     };
-  }, [loadLocationData, onDataUploaded]);
+  }, [loadLocationData, dispatch]);
 
   return (
     <div className="relative w-full h-full">

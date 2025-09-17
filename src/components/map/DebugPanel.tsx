@@ -2,14 +2,18 @@
 
 import { LocationData } from '@/types';
 import Map from 'ol/Map';
+import { useAppSelector } from '@/store/hooks';
 
 interface DebugPanelProps {
   show: boolean;
   map: Map | null;
-  locations: LocationData[];
+  locations?: LocationData[]; // Redux에서 가져오므로 optional로 변경
 }
 
-export default function DebugPanel({ show, map, locations }: DebugPanelProps) {
+export default function DebugPanel({ show, map, locations: propsLocations }: DebugPanelProps) {
+  const reduxLocations = useAppSelector((state) => state.location.locations);
+  const locations = propsLocations || reduxLocations;
+
   if (!show) return null;
 
   const validLocationsCount = locations.filter((loc) => loc.lat && loc.lon).length;

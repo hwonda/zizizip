@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { LocationData, UploadResponse } from '@/types';
+import { UploadResponse } from '@/types';
+import { useAppDispatch } from '@/store/hooks';
+import { setLocations } from '@/store/locationSlice';
 
-interface UploadSidebarProps {
-  onDataUploaded?: (data: LocationData[])=> void;
-}
-
-export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
+export default function UploadSidebar() {
+  const dispatch = useAppDispatch();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -47,17 +46,8 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         console.log('데이터를 세션 스토리지에 저장 중...');
         sessionStorage.setItem('locationData', JSON.stringify(data.data));
 
-        // 부모 컴포넌트에 데이터가 업로드되었음을 알림
-        if (onDataUploaded) {
-          console.log('부모 컴포넌트에 데이터 전달 중...');
-          onDataUploaded(data.data);
-
-          // 데이터 업데이트 후 지도 강제 업데이트를 위한 이벤트 발생
-          console.log('지도 업데이트 이벤트 발생');
-          window.dispatchEvent(new CustomEvent('locationDataUpdated', { detail: data.data }));
-        } else {
-          console.warn('onDataUploaded 콜백이 제공되지 않았습니다.');
-        }
+        // Redux store에 데이터 저장
+        dispatch(setLocations(data.data));
       } else {
         console.error('API 응답에 오류가 있습니다:', data.error);
         setError(data.error || '업로드 중 오류가 발생했습니다.');
