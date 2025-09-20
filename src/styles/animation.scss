@@ -1,3 +1,5 @@
+@use "sass:map";
+
 // 애니메이션 변수
 $fade-duration: 1s;
 $slide-duration: 0.7s;
@@ -91,7 +93,7 @@ $delays: (
 
 .animate-intro-next {
   @extend .animate-intro;
-  animation-delay: map-get($delays, 500);
+  animation-delay: map.get($delays, 500);
 }
 
 // 애니메이션 딜레이 클래스
