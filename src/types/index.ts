@@ -31,3 +31,19 @@ export interface UploadResponse {
   data?: LocationData[];
   error?: string;
 }
+
+// 데이터셋 관리를 위한 새로운 타입들
+export interface LocationDataset {
+  id: string;
+  name: string;
+  uploadedAt: Date;
+  data: LocationData[];
+  color: string;
+}
+
+// 확장된 위치 데이터 (데이터셋 정보 포함)
+export interface ExtendedLocationData extends LocationData {
+  datasetId: string;
+  datasetName: string;
+  datasetColor: string;
+}

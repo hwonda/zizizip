@@ -1,62 +1,60 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { LocationData } from '@/types';
+import { ExtendedLocationData } from '@/types';
+import { useDatasetManager } from '@/hooks/useDatasetManager';
 
 interface MapContainerProps {
   children: React.ReactNode;
-  onDataUploaded: (data: LocationData[])=> void;
+  onDataUploaded: (data: ExtendedLocationData[])=> void;
 }
 
 export default function MapContainer({ children, onDataUploaded }: MapContainerProps) {
-  // 위치 데이터 상태 관리 (setLocations만 사용)
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // 위치 데이터 로드 함수 (useCallback으로 메모이제이션)
-  const loadLocationData = useCallback(() => {
-    console.log('위치 데이터 로드 시도 중...');
+  // 데이터셋 관리 훅 사용
+  const { getSelectedData } = useDatasetManager();
+
+  // 선택된 데이터셋들의 데이터를 로드하는 함수
+  const loadSelectedData = useCallback(() => {
+    console.log('선택된 데이터셋 로드 시도 중...');
     try {
-      const storedData = sessionStorage.getItem('locationData');
-      if (storedData) {
-        console.log('세션 스토리지에서 데이터 찾음');
-        const parsedData = JSON.parse(storedData);
-        console.log(`파싱된 데이터 항목 수: ${ parsedData.length }`);
+      const selectedData = getSelectedData();
+      console.log(`선택된 데이터 항목 수: ${ selectedData.length }`);
 
-        // 좌표 데이터 검증
-        const validLocations = parsedData.filter((loc: LocationData) => loc.lat && loc.lon);
-        console.log(`유효한 좌표가 있는 위치 데이터: ${ validLocations.length }/${ parsedData.length }`);
+      // 좌표 데이터 검증
+      const validLocations = selectedData.filter((loc) => loc.lat && loc.lon);
+      console.log(`유효한 좌표가 있는 위치 데이터: ${ validLocations.length }/${ selectedData.length }`);
 
-        if (validLocations.length > 0) {
-          console.log('첫 번째 유효한 위치 데이터:', validLocations[0]);
-        } else {
-          console.warn('유효한 좌표가 있는 위치 데이터가 없습니다!');
-        }
-        onDataUploaded(parsedData);
-      } else {
-        console.warn('세션 스토리지에 위치 데이터가 없습니다.');
+      if (validLocations.length > 0) {
+        console.log('첫 번째 유효한 위치 데이터:', validLocations[0]);
+      } else if (selectedData.length > 0) {
+        console.warn('유효한 좌표가 있는 위치 데이터가 없습니다!');
       }
+
+      onDataUploaded(selectedData);
       setIsLoading(false);
     } catch (err) {
-      console.error('위치 데이터 로드 실패:', err);
+      console.error('데이터 로드 실패:', err);
       setError(err instanceof Error ? err : new Error('데이터 로드 오류'));
       setIsLoading(false);
     }
-  }, [onDataUploaded]);
+  }, [getSelectedData, onDataUploaded]);
 
-  // 세션 스토리지에서 위치 데이터 로드
+  // 초기 데이터 로드 및 이벤트 리스너 설정
   useEffect(() => {
-    loadLocationData();
+    loadSelectedData();
 
     // 위치 데이터 업데이트 이벤트 리스너 추가
     const handleLocationDataUpdated = (event: Event) => {
       console.log('위치 데이터 업데이트 이벤트 수신');
-      const customEvent = event as CustomEvent<LocationData[]>;
+      const customEvent = event as CustomEvent<ExtendedLocationData[]>;
       if (customEvent.detail) {
         console.log('새 위치 데이터:', customEvent.detail);
         onDataUploaded(customEvent.detail);
       } else {
-        loadLocationData(); // 이벤트에 데이터가 없으면 세션 스토리지에서 다시 로드
+        loadSelectedData(); // 이벤트에 데이터가 없으면 다시 로드
       }
     };
 
@@ -65,7 +63,7 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
     return () => {
       window.removeEventListener('locationDataUpdated', handleLocationDataUpdated);
     };
-  }, [loadLocationData, onDataUploaded]);
+  }, [loadSelectedData, onDataUploaded]);
 
   return (
     <div className="relative w-full h-full">

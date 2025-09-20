@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
-import { LocationData } from '@/types';
+import { ExtendedLocationData } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
@@ -14,9 +14,9 @@ import { FeatureLike } from 'ol/Feature';
 interface MarkerManagerProps {
   map: Map | null;
   vectorSource: VectorSource | null;
-  locations: LocationData[];
+  locations: ExtendedLocationData[];
   showAllMarkers: boolean;
-  onMarkerClick?: (location: LocationData)=> void;
+  onMarkerClick?: (location: ExtendedLocationData)=> void;
 }
 
 export default function MarkerManager({
@@ -27,20 +27,27 @@ export default function MarkerManager({
   onMarkerClick,
 }: MarkerManagerProps) {
   // 이전 locations 데이터를 저장하여 불필요한 업데이트 방지
-  const prevLocationsRef = useRef<LocationData[]>([]);
-  // 마커 스타일 생성 함수 (useCallback으로 메모이제이션)
+  const prevLocationsRef = useRef<ExtendedLocationData[]>([]);
+
+  // 마커 스타일 생성 함수 (데이터셋별 색상 + 가격별 투명도)
   const createMarkerStyle = useCallback((feature: FeatureLike) => {
     const price = feature.get('price') as number;
+    const datasetColor = feature.get('datasetColor') as string;
 
-    // 가격에 따른 마커 스타일 변경
-    const color = price < 50000000 ? '#3498db'
-      : price < 100000000 ? '#2ecc71'
-        : price < 200000000 ? '#f39c12' : '#e74c3c';
+    // 가격에 따른 투명도 조정 (높은 가격일수록 진함)
+    const opacity = price < 50000000 ? 0.6
+      : price < 100000000 ? 0.7
+        : price < 200000000 ? 0.8 : 1.0;
+
+    // 데이터셋 색상을 기본으로 하되, 투명도로 가격 구분
+    const rgbaColor = datasetColor
+      ? `${ datasetColor }${ Math.floor(opacity * 255).toString(16).padStart(2, '0') }`
+      : '#3498db';
 
     return new Style({
       image: new CircleStyle({
         radius: 8,
-        fill: new Fill({ color }),
+        fill: new Fill({ color: rgbaColor }),
         stroke: new Stroke({ color: '#ffffff', width: 2 }),
       }),
       text: new Text({
@@ -54,17 +61,26 @@ export default function MarkerManager({
   }, []);
 
   // 위치 데이터가 실제로 변경되었는지 확인
-  const locationsChanged = useCallback((newLocations: LocationData[], prevLocations: LocationData[]) => {
-    if (newLocations.length !== prevLocations.length) return true;
+  const locationsChanged = useCallback((newLocations: ExtendedLocationData[], prevLocations: ExtendedLocationData[]) => {
+    console.log(`🔍 데이터 변경 확인: 새로운 ${ newLocations.length }개 vs 이전 ${ prevLocations.length }개`);
 
-    return newLocations.some((newLoc, index) => {
+    if (newLocations.length !== prevLocations.length) {
+      console.log('✅ 배열 길이가 다름 → 변경됨');
+      return true;
+    }
+
+    const hasChanged = newLocations.some((newLoc, index) => {
       const prevLoc = prevLocations[index];
       return !prevLoc
         || newLoc.name !== prevLoc.name
         || newLoc.lat !== prevLoc.lat
         || newLoc.lon !== prevLoc.lon
-        || newLoc.price !== prevLoc.price;
+        || newLoc.price !== prevLoc.price
+        || newLoc.datasetId !== prevLoc.datasetId;
     });
+
+    console.log(`🔍 내용 비교 결과: ${ hasChanged ? '변경됨' : '변경되지 않음' }`);
+    return hasChanged;
   }, []);
 
   // 마커 업데이트 (데이터가 실제로 변경되었을 때만 실행)
@@ -86,11 +102,16 @@ export default function MarkerManager({
 
     if (!locations || locations.length === 0) {
       // 데이터가 없으면 기존 마커만 제거
-      if (vectorSource.getFeatures().length > 0) {
-        console.log('위치 데이터가 없어서 기존 마커 제거');
+      const currentMarkerCount = vectorSource.getFeatures().length;
+      if (currentMarkerCount > 0) {
+        console.log(`🗑️  빈 배열 수신, 기존 마커 ${ currentMarkerCount }개 제거`);
         vectorSource.clear();
+        console.log('✅ 마커 제거 완료');
+      } else {
+        console.log('📍 빈 배열 수신했지만 제거할 마커가 없음');
       }
       prevLocationsRef.current = [];
+      console.log('📝 prevLocationsRef 빈 배열로 업데이트됨');
       return;
     }
 
@@ -127,6 +148,9 @@ export default function MarkerManager({
             geometry: new Point(coordinates),
             name: location.name,
             price: location.price,
+            datasetId: location.datasetId,
+            datasetName: location.datasetName,
+            datasetColor: location.datasetColor,
             locationData: location,
           });
 
@@ -186,7 +210,7 @@ export default function MarkerManager({
 
       if (feature) {
         console.log('마커 클릭됨:', feature.get('name'));
-        const locationData = feature.get('locationData') as LocationData;
+        const locationData = feature.get('locationData') as ExtendedLocationData;
         onMarkerClick(locationData);
       } else {
         onMarkerClick(null as any);

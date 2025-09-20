@@ -2,14 +2,14 @@
 
 import DebugSidebar from '@/components/navigation/DebugSidebar';
 import UploadSidebar from '@/components/navigation/UploadSidebar';
-import { LocationData } from '@/types';
+import { ExtendedLocationData } from '@/types';
 
 interface NavigationWrapperProps {
   showAllMarkers: boolean;
   showDebugInfo: boolean;
   onToggleMarkers: ()=> void;
   onToggleDebugInfo: ()=> void;
-  onDataUploaded: (data: LocationData[])=> void;
+  onDataUploaded: (data: ExtendedLocationData[])=> void;
 }
 
 export default function NavigationWrapper({
