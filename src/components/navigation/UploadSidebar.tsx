@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UploadResponse, ExtendedLocationData } from '@/types';
 import { useDatasetManager } from '@/hooks/useDatasetManager';
-import { CloudUpload } from 'lucide-react';
+import { Upload, File, X } from 'lucide-react';
 
 interface UploadSidebarProps {
   onDataUploaded?: (data: ExtendedLocationData[])=> void;
@@ -141,11 +141,11 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
   return (
     <div className="h-full overflow-auto">
-      <h2 className="text-xl font-bold mb-4 text-black">{'CSV 파일 업로드'}</h2>
+      <h2 className="text-sm font-bold mb-4 text-black">{'CSV 파일 업로드'}</h2>
 
       {/* 파일 업로드 폼 */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+        <div className={`border border-dashed border-gray-7 rounded-lg p-4 text-center hover:border-secondary ${ (isUploading || file) ? 'border-secondary' : '' }`}>
           <label className="block">
             <input
               type="file"
@@ -154,19 +154,22 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               className="hidden"
             />
             <div className="flex flex-col items-center cursor-pointer">
-              <CloudUpload className="w-8 h-8 text-gray-400" />
-              <span className="mt-2 text-sm text-gray-600">
+              {!file || isUploading ? (
+                <Upload className="w-6 h-6 text-gray-7" />
+              ) : (
+                <>
+                  <File className="w-6 h-6 text-secondary" />
+                </>
+              )}
+              <span className={`mt-2 text-sm ${ file ? 'text-primary' : 'text-gray-7' }`}>
                 {file ? file.name : 'CSV 파일 선택'}
-              </span>
-              <span className="mt-1 text-xs text-gray-500">
-                {'(name, address, price 컬럼 필요)'}
               </span>
             </div>
           </label>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-2 rounded-md text-xs">
+          <div className="bg-error text-white p-2 rounded-md text-xs">
             {error}
           </div>
         )}
@@ -174,38 +177,38 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         <button
           type="submit"
           disabled={!file || isUploading}
-          className={`w-full px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm ${
-            (!file || isUploading) ? 'opacity-50 cursor-not-allowed' : ''
+          className={`w-full px-3 py-2 bg-primary text-white rounded-md hover:bg-secondary transition text-sm ${
+            !file ? 'hidden' : ''
           }`}
         >
-          {isUploading ? '업로드 중...' : '업로드'}
+          {isUploading ? `${ file?.name ?? '' } 파일 업로드 중...` : '업로드'}
         </button>
       </form>
 
       {isUploading && (
-        <div className="mt-4 text-center text-xs text-gray-600">
+        <div className="mt-4 text-center text-xs text-sub">
           {'파일을 업로드하고 지오코딩 처리 중입니다...'}
         </div>
       )}
 
       {/* 데이터셋 관리 섹션 */}
       {hasDatasets && (
-        <div className="mt-6 border-t border-gray-200 pt-6">
+        <div className="mt-6 border-t border-gray-8 pt-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-black">
-              {'데이터셋 관리'}{' ('}{selectedCount}{'/'}{totalDatasets}{')'}
+            <h3 className="font-semibold text-sub">
+              {'목록'}{' ('}{selectedCount}{'/'}{totalDatasets}{')'}
             </h3>
             {totalDatasets > 1 && (
               <button
                 onClick={handleToggleAll}
-                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition"
+                className="text-xs px-2 py-1 bg-background-10 hover:bg-background-20 rounded transition"
               >
                 {selectedCount === totalDatasets ? '전체 해제' : '전체 선택'}
               </button>
             )}
           </div>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="space-y-2">
             {datasets.map((dataset) => {
               const stats = getDatasetStats(dataset.id);
               const selected = isSelected(dataset.id);
@@ -214,7 +217,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                 <div
                   key={dataset.id}
                   className={`p-3 border rounded-lg transition ${
-                    selected ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'
+                    selected ? 'border-primary bg-background-10' : 'border-background-20 bg-background'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -223,7 +226,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                         type="checkbox"
                         checked={selected}
                         onChange={() => handleDatasetToggle(dataset.id)}
-                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="mt-1 h-4 w-4 text-primary rounded focus:ring-primary"
                       />
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
@@ -231,19 +234,19 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: dataset.color }}
                           />
-                          <span className="font-medium text-sm text-gray-900">
+                          <span className="font-medium text-sm text-gray-1">
                             {dataset.name}
                           </span>
                         </div>
                         {stats && (
-                          <div className="mt-1 text-xs text-gray-500">
+                          <div className="mt-1 text-xs text-sub">
                             {'총'} {stats.totalItems}{'개'}{' | '}{'유효 좌표'} {stats.validCoordinates}{'개'}
                             {stats.averagePrice > 0 && (
                               <>{' | '}{'평균'} {Math.round(stats.averagePrice / 10000)}{'만원'}</>
                             )}
                           </div>
                         )}
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs text-sub mt-1">
                           {dataset.uploadedAt.toLocaleDateString('ko-KR', {
                             month: 'short',
                             day: 'numeric',
@@ -256,16 +259,10 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
                     <button
                       onClick={() => handleDatasetRemove(dataset.id)}
-                      className="ml-2 text-red-400 hover:text-red-600 transition"
+                      className="ml-2 text-error hover:text-error transition"
                       title="데이터셋 삭제"
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -274,7 +271,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
           </div>
 
           {selectedCount === 0 && (
-            <div className="mt-3 text-center text-sm text-gray-500">
+            <div className="mt-3 text-center text-sm text-sub">
               {'표시할 데이터셋을 선택해주세요'}
             </div>
           )}

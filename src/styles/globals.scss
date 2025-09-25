@@ -17,6 +17,11 @@ button {
 :root {
   --primary-color: rgb(254, 104, 29);
   --secondary-color: rgb(255, 160, 36);
+
+  --error-color: rgb(219, 24, 24);
+  --warning-color: rgb(230, 158, 33);
+  --success-color: rgb(16, 207, 16);
+  --info-color: rgb(45, 87, 238);
   
   --background-color: rgb(245, 245, 245);
   --background-color-opacity-10: rgba(245, 245, 245, 0.1);
@@ -55,6 +60,11 @@ button {
   --primary-color: #FE3B61;
   --secondary-color: #EC458D;
 
+  --error-color: rgb(255, 161, 161);
+  --warning-color: rgb(255, 198, 100);
+  --success-color: rgb(130, 254, 130);
+  --info-color: rgb(104, 137, 255);
+
   --background-color: rgb(20, 20, 20);
   --background-color-opacity-10: rgba(20, 20, 20, 0.1);
   --background-color-opacity-20: rgba(20, 20, 20, 0.2);
@@ -86,6 +96,11 @@ button {
 @theme inline {
   --color-primary: var(--primary-color);
   --color-secondary: var(--secondary-color);
+
+  --color-error: var(--error-color);
+  --color-warning: var(--warning-color);
+  --color-success: var(--success-color);
+  --color-info: var(--info-color);
 
   --color-background: var(--background-color);
   --color-background-10: var(--background-color-opacity-10);
