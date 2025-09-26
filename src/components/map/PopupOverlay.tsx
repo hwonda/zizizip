@@ -41,7 +41,7 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
       element: popupRef.current,
       positioning: 'bottom-center',
       stopEvent: false,
-      offset: [0, -10],
+      offset: [-20, 25],
     });
 
     map.addOverlay(popup);
@@ -56,7 +56,7 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
     };
   }, [map]);
 
-  // 선택된 위치에 따라 팝업 위치 업데이트
+  // 선택된 위치에 따라 팝업 위치 업데이트 및 지도 이동
   useEffect(() => {
     if (!map || !overlayRef.current) return;
 
@@ -65,10 +65,18 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
       const coordinates = fromLonLat([selectedLocation.lon, selectedLocation.lat]);
       overlayRef.current.setPosition(coordinates);
 
+      // 선택된 위치로 지도 중앙 이동 및 줌인
+      const view = map.getView();
+      view.animate({
+        center: coordinates,
+        zoom: Math.max(view.getZoom() || 10, 15),
+        duration: 800,
+      });
+
       // 팝업이 보이도록 강제로 스타일 설정
       if (popupRef.current) {
         popupRef.current.style.display = 'block';
-        popupRef.current.style.zIndex = '1000';
+        popupRef.current.style.zIndex = '10';
       }
     } else {
       overlayRef.current.setPosition(undefined);
@@ -81,18 +89,13 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
   return (
     <div
       ref={popupRef}
-      className="absolute bg-white p-3 rounded-lg shadow-lg transform -translate-x-1/2 pointer-events-none"
-      style={{
-        zIndex: 1000,
-        display: selectedLocation ? 'block' : 'none',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
-      }}
+      className="absolute bg-background-80 bg-background p-3 rounded-lg shadow-lg transform pointer-events-none shadow-lg"
     >
       {selectedLocation && (
         <div className="w-64">
           <h3 className="font-bold text-lg">{selectedLocation.name}</h3>
-          <p className="text-gray-600 text-sm mb-1">{selectedLocation.address}</p>
-          <p className="font-semibold text-blue-600">
+          <p className="text-gray-6 text-sm mb-1">{selectedLocation.address}</p>
+          <p className="font-semibold text-primary">
             {formatPrice(selectedLocation.price)}
           </p>
         </div>

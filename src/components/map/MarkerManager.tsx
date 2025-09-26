@@ -8,7 +8,7 @@ import VectorLayer from 'ol/layer/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
-import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
+import { Style, Fill, Stroke, Text, Icon } from 'ol/style';
 import { FeatureLike } from 'ol/Feature';
 
 interface MarkerManagerProps {
@@ -29,36 +29,47 @@ export default function MarkerManager({
   // 이전 locations 데이터를 저장하여 불필요한 업데이트 방지
   const prevLocationsRef = useRef<ExtendedLocationData[]>([]);
 
-  // 마커 스타일 생성 함수 (데이터셋별 색상 + 가격별 투명도)
+  // MapPin 모양 아이콘 SVG 생성 함수 (Lucide 스타일)
+  const createMapPinSVG = useCallback((color: string) => {
+    const svg = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" 
+              fill="${ color }" 
+              stroke="#ffffff" 
+              stroke-width="2"/>
+        <circle cx="12" cy="10" r="3" 
+                fill="#ffffff" 
+                stroke="${ color }" 
+                stroke-width="1"/>
+      </svg>
+    `;
+
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }, []);
+
+  // 마커 스타일 생성 함수 (데이터셋별 색상)
   const createMarkerStyle = useCallback((feature: FeatureLike) => {
-    const price = feature.get('price') as number;
-    const datasetColor = feature.get('datasetColor') as string;
+    const datasetColor = feature.get('datasetColor') as string || '#3498db';
 
-    // 가격에 따른 투명도 조정 (높은 가격일수록 진함)
-    const opacity = price < 50000000 ? 0.6
-      : price < 100000000 ? 0.7
-        : price < 200000000 ? 0.8 : 1.0;
-
-    // 데이터셋 색상을 기본으로 하되, 투명도로 가격 구분
-    const rgbaColor = datasetColor
-      ? `${ datasetColor }${ Math.floor(opacity * 255).toString(16).padStart(2, '0') }`
-      : '#3498db';
+    // MapPin 모양 아이콘 생성
+    const iconSrc = createMapPinSVG(datasetColor);
 
     return new Style({
-      image: new CircleStyle({
-        radius: 8,
-        fill: new Fill({ color: rgbaColor }),
-        stroke: new Stroke({ color: '#ffffff', width: 2 }),
+      image: new Icon({
+        src: iconSrc,
+        scale: 1,
+        anchor: [0.5, 1], // 물방울 끝점이 정확한 위치를 가리키도록
       }),
       text: new Text({
         text: feature.get('name'),
-        offsetY: -15,
+        offsetY: 10, // 마커 아래쪽에 표시
         font: '12px Arial',
         fill: new Fill({ color: '#333' }),
         stroke: new Stroke({ color: '#fff', width: 3 }),
+        textAlign: 'center',
       }),
     });
-  }, []);
+  }, [createMapPinSVG]);
 
   // 위치 데이터가 실제로 변경되었는지 확인
   const locationsChanged = useCallback((newLocations: ExtendedLocationData[], prevLocations: ExtendedLocationData[]) => {
