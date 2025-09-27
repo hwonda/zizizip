@@ -4,15 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { LocationData, LocationDataset, ExtendedLocationData } from '@/types';
 
 // 데이터셋별 색상 팔레트
-const DATASET_COLORS = [
-  '#3498db', // 파랑
-  '#e74c3c', // 빨강
-  '#2ecc71', // 초록
-  '#f39c12', // 주황
+const dataColors = [
   '#9b59b6', // 보라
-  '#1abc9c', // 청록
+  '#f39c12', // 주황
+  '#e74c3c', // 빨강
+  '#3498db', // 파랑
+  '#2ecc71', // 초록
   '#34495e', // 회색
-  '#f1c40f', // 노랑
 ];
 
 interface DatasetManagerState {
@@ -86,6 +84,21 @@ export const useDatasetManager = () => {
     }
   }, [datasets, selectedIds, isInitialized]);
 
+  // 사용 가능한 색상 찾기
+  const getAvailableColor = useCallback((currentDatasets: LocationDataset[]) => {
+    const usedColors = currentDatasets.map((dataset) => dataset.color);
+
+    // 사용되지 않은 색상 찾기
+    for (const color of dataColors) {
+      if (!usedColors.includes(color)) {
+        return color;
+      }
+    }
+
+    // 모든 색상이 사용 중이면 순환하여 할당
+    return dataColors[currentDatasets.length % dataColors.length];
+  }, []);
+
   // 새 데이터셋 추가
   const addDataset = useCallback((data: LocationData[], name: string) => {
     const newDataset: LocationDataset = {
@@ -93,15 +106,15 @@ export const useDatasetManager = () => {
       name: name || `데이터셋 ${ datasets.length + 1 }`,
       uploadedAt: new Date(),
       data: data,
-      color: DATASET_COLORS[datasets.length % DATASET_COLORS.length],
+      color: getAvailableColor(datasets),
     };
 
     setDatasets((prev) => [...prev, newDataset]);
     setSelectedIds((prev) => [...prev, newDataset.id]);
 
-    console.log(`새 데이터셋 추가: ${ newDataset.name } (${ data.length }개 항목)`);
+    console.log(`새 데이터셋 추가: ${ newDataset.name } (${ data.length }개 항목), 색상: ${ newDataset.color }`);
     return newDataset.id;
-  }, [datasets.length]);
+  }, [datasets, getAvailableColor]);
 
   // 데이터셋 선택/해제 토글
   const toggleDataset = useCallback((id: string) => {
