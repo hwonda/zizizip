@@ -22,6 +22,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // 데이터셋 관리 훅 사용
   const {
@@ -118,15 +119,8 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     }
   };
 
-  // 파일 선택 핸들러 - 즉시 업로드
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-
-    // 파일 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
-    e.target.value = '';
-
-    if (!selectedFile) return;
-
+  // 공통 파일 처리 함수
+  const processFile = async (selectedFile: File) => {
     // 각종 validation 체크
     const validationChecks = [
       () => validateUploadLimit(datasets.length),
@@ -161,6 +155,62 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     await uploadFile(formData, selectedFile.name);
   };
 
+  // 파일 선택 핸들러 - 즉시 업로드
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+
+    // 파일 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+    e.target.value = '';
+
+    if (!selectedFile) return;
+
+    await processFile(selectedFile);
+  };
+
+  // 드래그 앤 드롭 핸들러들
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragOver) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 드래그 영역을 완전히 벗어났을 때만 상태 변경
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const csvFile = files.find((file) => file.name.endsWith('.csv'));
+
+    if (!csvFile) {
+      setError('CSV 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    if (files.length > 1) {
+      setError('한 번에 하나의 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    await processFile(csvFile);
+  };
+
   // 데이터셋 선택 변경 시 지도 업데이트
   const handleDatasetToggle = (datasetId: string) => {
     toggleDataset(datasetId);
@@ -183,7 +233,20 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
       {/* 파일 업로드 영역 */}
       <div className="space-y-4">
-        <div className={`group border border-dashed border-gray-7 rounded-lg p-4 text-center ${ datasets.length >= 3 ? 'opacity-50 cursor-not-allowed' : 'hover:border-secondary cursor-pointer' } ${ isUploading ? 'border-secondary' : '' }`}>
+        <div
+          className={`group border border-dashed rounded-lg p-4 text-center transition-all duration-200 hover:bg-secondary/10 hover:border-secondary ${
+            datasets.length >= 3
+              ? 'opacity-50 cursor-not-allowed border-gray-7'
+              : isDragOver
+                ? 'border-primary bg-primary/5 cursor-pointer'
+                : isUploading
+                  ? 'border-secondary cursor-pointer'
+                  : 'border-gray-7 cursor-pointer'
+          }`}
+          onDragOver={datasets.length < 3 && !isUploading ? handleDragOver : undefined}
+          onDragLeave={datasets.length < 3 && !isUploading ? handleDragLeave : undefined}
+          onDrop={datasets.length < 3 && !isUploading ? handleDrop : undefined}
+        >
           <label className="block">
             <input
               type="file"
@@ -193,14 +256,31 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               disabled={datasets.length >= 3 || isUploading}
             />
             <div className="flex flex-col items-center cursor-pointer">
-              <Upload className={`w-6 h-6 ${ isUploading ? 'text-secondary animate-pulse' : 'text-gray-1' } group-hover:text-secondary`} />
-              <span className={`mt-2 text-sm ${ isUploading ? 'text-secondary' : 'text-gray-1' } group-hover:text-secondary`}>
+              <Upload className={`w-6 h-6 transition-colors ${
+                isUploading
+                  ? 'text-primary animate-pulse'
+                  : isDragOver
+                    ? 'text-primary'
+                    : 'text-gray-1 group-hover:text-primary'
+              }`}
+              />
+              <span className={`mt-2 text-sm transition-colors ${
+                isUploading
+                  ? 'text-primary'
+                  : isDragOver
+                    ? 'text-primary font-medium'
+                    : 'text-gray-1 group-hover:text-primary'
+              }`}
+              >
                 {isUploading
                   ? `${ file?.name ?? '' } 업로드 중...`
                   : datasets.length >= 3
                     ? '파일 업로드 제한 (최대 3개)'
-                    : 'CSV 파일 선택 (자동 업로드)'
+                    : 'CSV 파일 선택'
                 }
+              </span>
+              <span className="text-xs text-gray-5 group-hover:text-primary transition duration-200">
+                {'파일을 드래그하거나 클릭하여 선택하세요'}
               </span>
             </div>
           </label>
@@ -226,15 +306,15 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
       {/* 데이터셋 관리 섹션 */}
       {hasDatasets && (
-        <div className="mt-6 border-t border-gray-8 pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-sub">
-              {'목록'}{' ('}{selectedCount}{'/'}{totalDatasets}{')'}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-1">
+              {'업로드 목록'}{' ('}{selectedCount}{'/'}{totalDatasets}{')'}
             </h3>
             {totalDatasets > 1 && (
               <button
                 onClick={handleToggleAll}
-                className="text-xs px-2 py-1 bg-background-10 hover:bg-background-20 rounded transition"
+                className="text-xs px-2 py-1 text-gray-4 hover:text-gray-1 rounded transition"
               >
                 {selectedCount === totalDatasets ? '전체 해제' : '전체 선택'}
               </button>
@@ -249,20 +329,20 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               return (
                 <div
                   key={dataset.id}
-                  className={`p-3 border rounded-lg transition ${
-                    selected ? 'border-primary bg-background-10' : 'border-background-20 bg-background'
-                  }`}
+                  className={`p-3 border rounded-lg transition hover:bg-secondary/10 ${
+                    selected ? 'border-primary' : 'border-gray-8'
+                  } hover:border-secondary`}
                 >
                   <div className="flex items-start justify-between">
-                    <label className="flex items-start space-x-2 cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => handleDatasetToggle(dataset.id)}
-                        className="mt-1 h-4 w-4 text-primary rounded focus:ring-primary"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
+                    <label className="flex flex-col cursor-pointer flex-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => handleDatasetToggle(dataset.id)}
+                          className="h-4 w-4 text-primary rounded focus:ring-primary"
+                        />
+                        <div className="flex flex-1 items-center gap-1">
                           <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: dataset.color }}
@@ -271,15 +351,26 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                             {dataset.name}
                           </span>
                         </div>
+                        <button
+                          onClick={() => handleDatasetRemove(dataset.id)}
+                          className="text-error hover:text-error transition"
+                          title="데이터셋 삭제"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex-1 ml-6">
                         {stats && (
                           <div className="mt-1 text-xs text-sub">
-                            {'총'} {stats.totalItems}{'개'}{' | '}{'유효 좌표'} {stats.validCoordinates}{'개'}
-                            {stats.averagePrice > 0 && (
+                            {'업로드 지점'}{' | '}{'총'} {stats.totalItems}{'개'}
+                            {/* {stats.averagePrice > 0 && (
                               <>{' | '}{'평균'} {Math.round(stats.averagePrice / 10000)}{'만원'}</>
-                            )}
+                            )} */}
                           </div>
                         )}
                         <div className="text-xs text-sub mt-1">
+                          {'업로드 시간'}{' | '}
                           {dataset.uploadedAt.toLocaleDateString('ko-KR', {
                             month: 'short',
                             day: 'numeric',
@@ -289,14 +380,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                         </div>
                       </div>
                     </label>
-
-                    <button
-                      onClick={() => handleDatasetRemove(dataset.id)}
-                      className="ml-2 text-error hover:text-error transition"
-                      title="데이터셋 삭제"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               );
@@ -304,7 +387,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
           </div>
 
           {selectedCount === 0 && (
-            <div className="mt-3 text-center text-sm text-sub">
+            <div className="mt-2 text-center text-xs text-secondary">
               {'표시할 데이터셋을 선택해주세요'}
             </div>
           )}
