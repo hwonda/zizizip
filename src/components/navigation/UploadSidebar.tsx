@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { UploadResponse, ExtendedLocationData } from '@/types';
 import { useDatasetManager } from '@/hooks/useDatasetManager';
 import { Upload, File, X } from 'lucide-react';
+import {
+  validateUploadResult,
+  validateFileSize,
+  validateFileFormat,
+  validateFileName,
+  validateDuplicateFile,
+  validateCSVContent,
+  validateUploadLimit,
+} from '@/utils/fileValidation';
 
 interface UploadSidebarProps {
   onDataUploaded?: (data: ExtendedLocationData[])=> void;
@@ -41,7 +50,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   }, [datasets, selectedIds, getSelectedData, onDataUploaded]);
 
   // 파일 업로드 함수
-  const uploadFile = async (formData: FormData) => {
+  const uploadFile = async (formData: FormData, fileName: string) => {
     console.log('파일 업로드 시작');
     setIsUploading(true);
     setError(null);
@@ -55,7 +64,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
       if (!response.ok) {
         console.error(`API 응답 오류: ${ response.status } ${ response.statusText }`);
-        throw new Error('Upload failed');
+        throw new Error(`서버 오류 (${ response.status }): 업로드에 실패했습니다.`);
       }
 
       console.log('API 응답 수신 완료, 데이터 파싱 중...');
@@ -71,17 +80,32 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       }
 
       if (data.success && data.data) {
+        // 업로드 결과 validation
+        const validationResult = validateUploadResult(data.data);
+
+        if (!validationResult.isValid) {
+          setError(validationResult.error);
+          setFile(null);
+          return;
+        }
+
         // 새로운 데이터셋 추가 (파일명에서 확장자 제거하여 데이터셋 이름으로 사용)
-        const datasetName = file?.name?.replace('.csv', '') || `데이터셋 ${ datasets.length + 1 }`;
-        console.log(`새 데이터셋 추가: ${ datasetName }`);
+        const datasetName = fileName.replace('.csv', '');
+        console.log(`새 데이터셋 추가: ${ datasetName }, 유효 데이터: ${ validationResult.validCount }/${ data.data.length }`);
         addDataset(data.data, datasetName);
 
         // 파일 입력 초기화
         setFile(null);
 
+        // 성공 메시지 (잠시 표시 후 자동 사라짐)
+        if (validationResult.warnings.length > 0) {
+          const warningMsg = `업로드 완료! 경고: ${ validationResult.warnings.join(', ') }`;
+          setError(warningMsg);
+          setTimeout(() => setError(null), 5000);
+        }
+
         // Note: 지도 업데이트는 useEffect에서 자동으로 처리됩니다
       } else {
-        console.error('API 응답에 오류가 있습니다:', data.error);
         setError(data.error || '업로드 중 오류가 발생했습니다.');
       }
     } catch (err) {
@@ -94,33 +118,47 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     }
   };
 
-  // 파일 선택 핸들러
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일 선택 핸들러 - 즉시 업로드
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (!selectedFile.name.endsWith('.csv')) {
-        setError('CSV 파일만 업로드 가능합니다.');
-        setFile(null);
+
+    // 파일 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+    e.target.value = '';
+
+    if (!selectedFile) return;
+
+    // 각종 validation 체크
+    const validationChecks = [
+      () => validateUploadLimit(datasets.length),
+      () => validateFileSize(selectedFile),
+      () => validateFileFormat(selectedFile.name),
+      () => validateFileName(selectedFile.name),
+      () => validateDuplicateFile(selectedFile.name, datasets),
+    ];
+
+    // 동기 validation 체크
+    for (const check of validationChecks) {
+      const error = check();
+      if (error) {
+        setError(error);
         return;
       }
-      setFile(selectedFile);
-      setError(null);
     }
-  };
 
-  // 제출 핸들러
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!file) {
-      setError('파일을 선택해주세요.');
+    // 비동기 CSV 내용 검증
+    const csvError = await validateCSVContent(selectedFile);
+    if (csvError) {
+      setError(csvError);
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 검증 통과 시 즉시 업로드
+    setFile(selectedFile);
+    setError(null);
 
-    uploadFile(formData);
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    await uploadFile(formData, selectedFile.name);
   };
 
   // 데이터셋 선택 변경 시 지도 업데이트
@@ -141,49 +179,44 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
   return (
     <div className="h-full overflow-auto">
-      <h2 className="text-sm font-bold mb-4 text-black">{'CSV 파일 업로드'}</h2>
+      <h2 className="sr-only">{'CSV 파일 업로드'}</h2>
 
-      {/* 파일 업로드 폼 */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className={`border border-dashed border-gray-7 rounded-lg p-4 text-center hover:border-secondary ${ (isUploading || file) ? 'border-secondary' : '' }`}>
+      {/* 파일 업로드 영역 */}
+      <div className="space-y-4">
+        <div className={`group border border-dashed border-gray-7 rounded-lg p-4 text-center ${ datasets.length >= 3 ? 'opacity-50 cursor-not-allowed' : 'hover:border-secondary cursor-pointer' } ${ isUploading ? 'border-secondary' : '' }`}>
           <label className="block">
             <input
               type="file"
               accept=".csv"
               onChange={handleFileChange}
               className="hidden"
+              disabled={datasets.length >= 3 || isUploading}
             />
             <div className="flex flex-col items-center cursor-pointer">
-              {!file || isUploading ? (
-                <Upload className="w-6 h-6 text-gray-7" />
-              ) : (
-                <>
-                  <File className="w-6 h-6 text-secondary" />
-                </>
-              )}
-              <span className={`mt-2 text-sm ${ file ? 'text-primary' : 'text-gray-7' }`}>
-                {file ? file.name : 'CSV 파일 선택'}
+              <Upload className={`w-6 h-6 ${ isUploading ? 'text-secondary animate-pulse' : 'text-gray-1' } group-hover:text-secondary`} />
+              <span className={`mt-2 text-sm ${ isUploading ? 'text-secondary' : 'text-gray-1' } group-hover:text-secondary`}>
+                {isUploading
+                  ? `${ file?.name ?? '' } 업로드 중...`
+                  : datasets.length >= 3
+                    ? '파일 업로드 제한 (최대 3개)'
+                    : 'CSV 파일 선택 (자동 업로드)'
+                }
               </span>
             </div>
           </label>
         </div>
 
         {error && (
-          <div className="bg-error text-white p-2 rounded-md text-xs">
+          <div className={`p-2 rounded-md text-xs ${
+            error.startsWith('업로드 완료!')
+              ? 'bg-success/10 text-success border border-success/20'
+              : 'bg-error/10 text-error border border-error/20'
+          }`}
+          >
             {error}
           </div>
         )}
-
-        <button
-          type="submit"
-          disabled={!file || isUploading}
-          className={`w-full px-3 py-2 bg-primary text-white rounded-md hover:bg-secondary transition text-sm ${
-            !file ? 'hidden' : ''
-          }`}
-        >
-          {isUploading ? `${ file?.name ?? '' } 파일 업로드 중...` : '업로드'}
-        </button>
-      </form>
+      </div>
 
       {isUploading && (
         <div className="mt-4 text-center text-xs text-sub">
