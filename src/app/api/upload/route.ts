@@ -333,9 +333,9 @@ export async function POST(request: NextRequest) {
       floor: ['층수', '층'],
       elevator: ['승강기'],
       houseType: ['주택유형', '유형'],
-      deposit: ['임대보증금', '보증금', '전세'],
-      monthlyRent: ['월임대료', '월세'],
-      salePrice: ['매매가', '매매'],
+      priceDeposit: ['임대보증금', '보증금', '전세'],
+      priceMonthly: ['월임대료', '월세'],
+      priceSale: ['매매가', '매매'],
     };
 
     // 헤더 확인 (이름과 주소만 필수)
@@ -377,9 +377,9 @@ export async function POST(request: NextRequest) {
       floor: getColumnIndex(columnMappings.floor),
       elevator: getColumnIndex(columnMappings.elevator),
       houseType: getColumnIndex(columnMappings.houseType),
-      deposit: getColumnIndex(columnMappings.deposit),
-      monthlyRent: getColumnIndex(columnMappings.monthlyRent),
-      salePrice: getColumnIndex(columnMappings.salePrice),
+      priceDeposit: getColumnIndex(columnMappings.priceDeposit),
+      priceMonthly: getColumnIndex(columnMappings.priceMonthly),
+      priceSale: getColumnIndex(columnMappings.priceSale),
     };
 
     // 유틸리티 함수들
@@ -418,6 +418,11 @@ export async function POST(request: NextRequest) {
         const address = getValue(row, columnIndices.address);
 
         if (name && address) {
+          // 가격 정보 파싱
+          const deposit = parseNumber(getValue(row, columnIndices.priceDeposit));
+          const monthly = parseNumber(getValue(row, columnIndices.priceMonthly));
+          const sale = parseNumber(getValue(row, columnIndices.priceSale));
+
           const location: LocationData = {
             name,
             address,
@@ -431,9 +436,13 @@ export async function POST(request: NextRequest) {
             floor: parseNumber(getValue(row, columnIndices.floor)),
             elevator: parseBoolean(getValue(row, columnIndices.elevator)),
             houseType: getValue(row, columnIndices.houseType),
-            deposit: parseNumber(getValue(row, columnIndices.deposit)),
-            monthlyRent: parseNumber(getValue(row, columnIndices.monthlyRent)),
-            salePrice: parseNumber(getValue(row, columnIndices.salePrice)),
+
+            // 가격 정보 (계층적 구조)
+            price: (deposit || monthly || sale) ? {
+              deposit,
+              monthly,
+              sale,
+            } : undefined,
           };
 
           // 주소 지오코딩

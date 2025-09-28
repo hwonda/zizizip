@@ -14,9 +14,12 @@ export interface LocationData {
   floor?: number; // 층수
   elevator?: boolean; // 승강기 유무
   houseType?: string; // 주택유형
-  deposit?: number; // 임대보증금
-  monthlyRent?: number; // 월임대료
-  salePrice?: number; // 매매가
+
+  price?: {
+    sale?: number; // 매매가
+    deposit?: number; // 임대보증금
+    monthly?: number; // 월임대료
+  };
 
   // 좌표
   lat?: number;

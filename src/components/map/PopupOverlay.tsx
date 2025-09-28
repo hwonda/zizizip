@@ -174,24 +174,24 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
             )}
 
             {/* 가격 정보 */}
-            {(selectedLocation.deposit || selectedLocation.monthlyRent || selectedLocation.salePrice) && (
+            {selectedLocation.price && (selectedLocation.price.deposit || selectedLocation.price.monthly || selectedLocation.price.sale) && (
               <div className="flex flex-col gap-0.5 mt-1 pt-1 border-t border-gray-8">
-                {selectedLocation.deposit && (
+                {selectedLocation.price.deposit && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'보증금'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.deposit)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.deposit)}</span>
                   </div>
                 )}
-                {selectedLocation.monthlyRent && (
+                {selectedLocation.price.monthly && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'월임대료'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.monthlyRent)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.monthly)}</span>
                   </div>
                 )}
-                {selectedLocation.salePrice && (
+                {selectedLocation.price.sale && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'매매가'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.salePrice)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.sale)}</span>
                   </div>
                 )}
               </div>
