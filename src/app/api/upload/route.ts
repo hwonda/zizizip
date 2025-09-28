@@ -320,19 +320,91 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 헤더 확인
-    const headers = data[0];
-    if (!headers.includes('이름') || !headers.includes('주소') || !headers.includes('전세')) {
+    // 컬럼 매핑 정의
+    const columnMappings = {
+      name: ['이름', '명칭', '물건명'],
+      address: ['주소', '소재지', '위치'],
+      building: ['동'],
+      unit: ['호'],
+      exclusiveArea: ['전용면적', '전용'],
+      livingArea: ['주거공용면적', '주거공용', '공용면적'],
+      totalArea: ['면적계', '총면적', '계'],
+      rooms: ['방수', '방'],
+      floor: ['층수', '층'],
+      elevator: ['승강기'],
+      houseType: ['주택유형', '유형'],
+      deposit: ['임대보증금', '보증금', '전세'],
+      monthlyRent: ['월임대료', '월세'],
+      salePrice: ['매매가', '매매'],
+    };
+
+    // 헤더 확인 (이름과 주소만 필수)
+    const headers = data[0].map((header: string) => header.trim());
+
+    // 필수 컬럼 확인
+    const hasName = columnMappings.name.some((nameVariant) =>
+      headers.some((header) => header.includes(nameVariant)),
+    );
+    const hasAddress = columnMappings.address.some((addressVariant) =>
+      headers.some((header) => header.includes(addressVariant)),
+    );
+
+    if (!hasName || !hasAddress) {
       return NextResponse.json(
-        { success: false, error: 'CSV must contain name, address, and price columns' },
+        { success: false, error: 'CSV must contain name and address columns' },
         { status: 400 },
       );
     }
 
-    // 인덱스 찾기
-    const nameIndex = headers.indexOf('이름');
-    const addressIndex = headers.indexOf('주소');
-    const priceIndex = headers.indexOf('전세');
+    // 각 필드의 인덱스 찾기
+    const getColumnIndex = (fieldMappings: string[]) => {
+      for (const mapping of fieldMappings) {
+        const index = headers.findIndex((header) => header.includes(mapping));
+        if (index !== -1) return index;
+      }
+      return -1;
+    };
+
+    const columnIndices = {
+      name: getColumnIndex(columnMappings.name),
+      address: getColumnIndex(columnMappings.address),
+      building: getColumnIndex(columnMappings.building),
+      unit: getColumnIndex(columnMappings.unit),
+      exclusiveArea: getColumnIndex(columnMappings.exclusiveArea),
+      livingArea: getColumnIndex(columnMappings.livingArea),
+      totalArea: getColumnIndex(columnMappings.totalArea),
+      rooms: getColumnIndex(columnMappings.rooms),
+      floor: getColumnIndex(columnMappings.floor),
+      elevator: getColumnIndex(columnMappings.elevator),
+      houseType: getColumnIndex(columnMappings.houseType),
+      deposit: getColumnIndex(columnMappings.deposit),
+      monthlyRent: getColumnIndex(columnMappings.monthlyRent),
+      salePrice: getColumnIndex(columnMappings.salePrice),
+    };
+
+    // 유틸리티 함수들
+    const parseNumber = (value: string | undefined): number | undefined => {
+      if (!value) return undefined;
+      const numStr = value.replace(/[^0-9.]/g, '');
+      const num = parseFloat(numStr);
+      return isNaN(num) ? undefined : num;
+    };
+
+    const parseBoolean = (value: string | undefined): boolean | undefined => {
+      if (!value) return undefined;
+      const lowerValue = value.toLowerCase().trim();
+      if (lowerValue.includes('있') || lowerValue.includes('유') || lowerValue === 'o' || lowerValue === 'yes') {
+        return true;
+      }
+      if (lowerValue.includes('없') || lowerValue.includes('무') || lowerValue === 'x' || lowerValue === 'no') {
+        return false;
+      }
+      return undefined;
+    };
+
+    const getValue = (row: string[], index: number): string | undefined => {
+      return index !== -1 && row[index] ? row[index].trim() : undefined;
+    };
 
     // 데이터 변환 및 지오코딩
     const locations: LocationData[] = [];
@@ -341,16 +413,28 @@ export async function POST(request: NextRequest) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
 
-      if (row.length >= 3) {
-        const name = row[nameIndex];
-        const address = row[addressIndex];
-        const priceStr = row[priceIndex];
+      if (row.length >= 2) {
+        const name = getValue(row, columnIndices.name);
+        const address = getValue(row, columnIndices.address);
 
-        // 가격 변환
-        const price = parseInt(priceStr.replace(/[^0-9]/g, ''), 10);
-
-        if (name && address && !isNaN(price)) {
-          const location: LocationData = { name, address, price };
+        if (name && address) {
+          const location: LocationData = {
+            name,
+            address,
+            // 선택적 필드들
+            building: getValue(row, columnIndices.building),
+            unit: getValue(row, columnIndices.unit),
+            exclusiveArea: parseNumber(getValue(row, columnIndices.exclusiveArea)),
+            livingArea: parseNumber(getValue(row, columnIndices.livingArea)),
+            totalArea: parseNumber(getValue(row, columnIndices.totalArea)),
+            rooms: parseNumber(getValue(row, columnIndices.rooms)),
+            floor: parseNumber(getValue(row, columnIndices.floor)),
+            elevator: parseBoolean(getValue(row, columnIndices.elevator)),
+            houseType: getValue(row, columnIndices.houseType),
+            deposit: parseNumber(getValue(row, columnIndices.deposit)),
+            monthlyRent: parseNumber(getValue(row, columnIndices.monthlyRent)),
+            salePrice: parseNumber(getValue(row, columnIndices.salePrice)),
+          };
 
           // 주소 지오코딩
           try {

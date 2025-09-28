@@ -205,17 +205,11 @@ export const useDatasetManager = () => {
 
     const validCoordinates = dataset.data.filter((loc) => loc.lat && loc.lon).length;
     const totalItems = dataset.data.length;
-    const averagePrice = dataset.data.reduce((sum, loc) => sum + (loc.price || 0), 0) / totalItems;
 
     return {
       totalItems,
       validCoordinates,
       invalidCoordinates: totalItems - validCoordinates,
-      averagePrice,
-      priceRange: {
-        min: Math.min(...dataset.data.map((loc) => loc.price || 0)),
-        max: Math.max(...dataset.data.map((loc) => loc.price || 0)),
-      },
     };
   }, [datasets]);
 

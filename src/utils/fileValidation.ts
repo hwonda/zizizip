@@ -20,16 +20,15 @@ export const validateUploadResult = (data: LocationData[]): ValidationResult => 
   data.forEach((item) => {
     let isValidItem = false;
 
+    // 필수 필드 확인 (이름과 주소)
+    if (item.name && item.name.trim().length > 0 && item.address && item.address.trim().length > 0) {
+      isValidItem = true;
+      hasAddress++;
+    }
+
     // 좌표 정보 확인
     if (item.lat && item.lon && !isNaN(Number(item.lat)) && !isNaN(Number(item.lon))) {
       hasCoordinates++;
-      isValidItem = true;
-    }
-
-    // 주소 정보 확인
-    if (item.address && item.address.trim().length > 0) {
-      hasAddress++;
-      isValidItem = true;
     }
 
     if (isValidItem) validCount++;
@@ -43,7 +42,7 @@ export const validateUploadResult = (data: LocationData[]): ValidationResult => 
   if (validCount === 0) {
     return {
       isValid: false,
-      error: '유효한 위치 데이터(주소 또는 좌표)가 없습니다.',
+      error: '유효한 데이터(이름과 주소가 있는 행)가 없습니다.',
       validCount: 0,
       warnings: [],
     };
@@ -154,14 +153,17 @@ export const validateCSVContent = async (file: File): Promise<string | null> => 
       return '헤더만 있고 데이터가 없습니다.';
     }
 
-    // CSV 헤더 검증 (기본적인 컬럼이 있는지 확인)
+    // CSV 헤더 검증 (필수 컬럼이 있는지 확인)
     const header = lines[0].toLowerCase();
-    const hasLocationData = header.includes('주소') || header.includes('address')
-                           || header.includes('lat') || header.includes('lng')
-                           || header.includes('lon') || header.includes('위도') || header.includes('경도');
+    const hasName = header.includes('이름') || header.includes('명칭') || header.includes('물건명');
+    const hasAddress = header.includes('주소') || header.includes('소재지') || header.includes('위치');
 
-    if (!hasLocationData) {
-      return '위치 정보 컬럼(주소, 위도, 경도 등)이 필요합니다.';
+    if (!hasName) {
+      return '이름 컬럼(이름, 명칭, 물건명 등)이 필요합니다.';
+    }
+
+    if (!hasAddress) {
+      return '주소 컬럼(주소, 소재지, 위치 등)이 필요합니다.';
     }
 
     return null;

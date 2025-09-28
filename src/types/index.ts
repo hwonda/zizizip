@@ -1,8 +1,24 @@
 // 위치 데이터 타입 정의
 export interface LocationData {
+  // 필수 필드
   name: string;
   address: string;
-  price: number;
+
+  // 선택적 필드들
+  building?: string; // 동
+  unit?: string; // 호
+  exclusiveArea?: number; // 전용 면적
+  livingArea?: number; // 주거공용 면적
+  totalArea?: number; // 면적 계
+  rooms?: number; // 방 수
+  floor?: number; // 층수
+  elevator?: boolean; // 승강기 유무
+  houseType?: string; // 주택유형
+  deposit?: number; // 임대보증금
+  monthlyRent?: number; // 월임대료
+  salePrice?: number; // 매매가
+
+  // 좌표
   lat?: number;
   lon?: number;
 }

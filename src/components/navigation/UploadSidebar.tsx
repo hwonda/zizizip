@@ -364,9 +364,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                         {stats && (
                           <div className="mt-1 text-xs text-sub">
                             {'업로드 지점'}{' | '}{'총'} {stats.totalItems}{'개'}
-                            {/* {stats.averagePrice > 0 && (
-                              <>{' | '}{'평균'} {Math.round(stats.averagePrice / 10000)}{'만원'}</>
-                            )} */}
                           </div>
                         )}
                         <div className="text-xs text-sub mt-1">
