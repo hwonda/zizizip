@@ -95,8 +95,11 @@ export const validateFileSize = (file: File, maxSizeMB: number = 10): string | n
  * 파일 형식을 검증합니다.
  */
 export const validateFileFormat = (fileName: string): string | null => {
-  if (!fileName.endsWith('.csv')) {
-    return 'CSV 파일만 업로드 가능합니다.';
+  const isCSV = fileName.endsWith('.csv');
+  const isXLSX = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+  if (!isCSV && !isXLSX) {
+    return 'CSV 또는 Excel 파일(.xlsx, .xls)만 업로드 가능합니다.';
   }
   return null;
 };
@@ -138,28 +141,66 @@ export const validateDuplicateFile = (
 };
 
 /**
- * CSV 파일 내용을 미리 검증합니다.
+ * CSV 또는 Excel 파일 내용을 미리 검증합니다.
  */
 export const validateCSVContent = async (file: File): Promise<string | null> => {
   try {
-    const text = await file.text();
-    const lines = text.split('\n').filter((line) => line.trim());
+    const isCSV = file.name.endsWith('.csv');
+    const isXLSX = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
 
-    if (lines.length === 0) {
-      return '파일이 비어있습니다.';
+    let headerRow: string = '';
+
+    if (isCSV) {
+      // CSV 파일 처리
+      const text = await file.text();
+      const lines = text.split('\n').filter((line) => line.trim());
+
+      if (lines.length === 0) {
+        return '파일이 비어있습니다.';
+      }
+
+      if (lines.length === 1) {
+        return '헤더만 있고 데이터가 없습니다.';
+      }
+
+      headerRow = lines[0].toLowerCase();
+    } else if (isXLSX) {
+      // Excel 파일 처리
+      const arrayBuffer = await file.arrayBuffer();
+      // xlsx 라이브러리를 동적으로 import해서 사용
+      const XLSX = await import('xlsx');
+
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const data = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: '',
+        raw: false,
+      }) as string[][];
+
+      const filteredData = data.filter((row) => row.some((cell) => cell && cell.toString().trim()));
+
+      if (filteredData.length === 0) {
+        return '파일이 비어있습니다.';
+      }
+
+      if (filteredData.length === 1) {
+        return '헤더만 있고 데이터가 없습니다.';
+      }
+
+      headerRow = filteredData[0].join(',').toLowerCase();
+    } else {
+      return '지원하지 않는 파일 형식입니다.';
     }
 
-    if (lines.length === 1) {
-      return '헤더만 있고 데이터가 없습니다.';
-    }
-
-    // CSV 헤더 검증 (필수 컬럼이 있는지 확인)
-    const header = lines[0].toLowerCase();
-    const hasName = header.includes('이름') || header.includes('명칭') || header.includes('물건명');
-    const hasAddress = header.includes('주소') || header.includes('소재지') || header.includes('위치');
+    // 헤더 검증 (필수 컬럼이 있는지 확인)
+    const hasName = headerRow.includes('이름') || headerRow.includes('명칭') || headerRow.includes('물건명') || headerRow.includes('주택군');
+    const hasAddress = headerRow.includes('주소') || headerRow.includes('소재지') || headerRow.includes('위치');
 
     if (!hasName) {
-      return '이름 컬럼(이름, 명칭, 물건명 등)이 필요합니다.';
+      return '이름 컬럼(이름, 명칭, 물건명, 주택군 등)이 필요합니다.';
     }
 
     if (!hasAddress) {

@@ -196,10 +196,14 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     setIsDragOver(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const csvFile = files.find((file) => file.name.endsWith('.csv'));
+    const supportedFile = files.find((file) =>
+      file.name.endsWith('.csv')
+      || file.name.endsWith('.xlsx')
+      || file.name.endsWith('.xls'),
+    );
 
-    if (!csvFile) {
-      setError('CSV 파일만 업로드 가능합니다.');
+    if (!supportedFile) {
+      setError('CSV 또는 Excel 파일(.xlsx, .xls)만 업로드 가능합니다.');
       return;
     }
 
@@ -208,7 +212,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       return;
     }
 
-    await processFile(csvFile);
+    await processFile(supportedFile);
   };
 
   // 데이터셋 선택 변경 시 지도 업데이트
@@ -250,7 +254,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
           <label className="block">
             <input
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               onChange={handleFileChange}
               className="hidden"
               disabled={datasets.length >= 3 || isUploading}
@@ -276,10 +280,10 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                   ? `${ file?.name ?? '' } 업로드 중...`
                   : datasets.length >= 3
                     ? '파일 업로드 제한 (최대 3개)'
-                    : 'CSV 파일 선택'
+                    : 'CSV 또는 Excel 파일 선택'
                 }
               </span>
-              <span className="text-xs text-gray-5 group-hover:text-primary transition duration-200">
+              <span className={`text-xs text-gray-5 group-hover:text-primary transition duration-200 ${ isUploading ? 'hidden' : '' }`}>
                 {'파일을 드래그하거나 클릭하여 선택하세요'}
               </span>
             </div>

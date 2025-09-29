@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'papaparse';
+import * as XLSX from 'xlsx';
 import { LocationData } from '@/types';
 
 // 간단한 인메모리 캐시 구현
@@ -298,31 +299,68 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CSV 파일 확인
-    if (!file.name.endsWith('.csv')) {
+    // CSV 또는 XLSX 파일 확인
+    const isCSV = file.name.endsWith('.csv');
+    const isXLSX = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    if (!isCSV && !isXLSX) {
       return NextResponse.json(
-        { success: false, error: 'Please upload a CSV file' },
+        { success: false, error: 'CSV 또는 Excel 파일(.xlsx, .xls)만 업로드 가능합니다' },
         { status: 400 },
       );
     }
 
-    // CSV 파일 읽기
-    const text = await file.text();
-    const { data, errors } = parse<string[]>(text, {
-      header: false,
-      skipEmptyLines: true,
-    });
+    // 파일 파싱 (CSV 또는 XLSX)
+    let data: string[][];
+    let errors: any[] = [];
+
+    if (isCSV) {
+      // CSV 파일 읽기
+      const text = await file.text();
+      const parseResult = parse<string[]>(text, {
+        header: false,
+        skipEmptyLines: true,
+      });
+      data = parseResult.data;
+      errors = parseResult.errors;
+    } else {
+      // XLSX 파일 읽기
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+        // 첫 번째 시트 사용
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // 시트를 2차원 배열로 변환
+        data = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1,
+          defval: '',
+          raw: false,
+        }) as string[][];
+
+        // 빈 행 제거
+        data = data.filter((row) => row.some((cell) => cell && cell.toString().trim()));
+      } catch (error) {
+        console.error('XLSX parsing error:', error);
+        return NextResponse.json(
+          { success: false, error: 'Excel 파일을 읽는 중 오류가 발생했습니다' },
+          { status: 400 },
+        );
+      }
+    }
 
     if (errors.length > 0) {
       return NextResponse.json(
-        { success: false, error: 'Error parsing CSV file' },
+        { success: false, error: `${ isCSV ? 'CSV' : 'Excel' } 파일을 파싱하는 중 오류가 발생했습니다` },
         { status: 400 },
       );
     }
 
     // 컬럼 매핑 정의
     const columnMappings = {
-      name: ['이름', '명칭', '물건명'],
+      name: ['이름', '명칭', '물건명', '주택군'],
       address: ['주소', '소재지', '위치'],
       building: ['동'],
       unit: ['호'],
