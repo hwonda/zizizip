@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { UploadResponse, ExtendedLocationData } from '@/types';
 import { useDatasetManager } from '@/hooks/useDatasetManager';
 import { Upload, File, X } from 'lucide-react';
+import MapPinIcon from '@/components/icons/MapPinIcon';
 import {
   validateUploadResult,
   validateFileSize,
@@ -347,11 +348,12 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                           className="h-4 w-4 text-primary rounded focus:ring-primary"
                         />
                         <div className="flex flex-1 items-center gap-1">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: dataset.color }}
+                          <MapPinIcon
+                            color={dataset.color}
+                            size={16}
+                            className="shrink-0"
                           />
-                          <span className="font-medium text-sm text-gray-1">
+                          <span className="font-medium text-sm text-gray-1 w-[164px] truncate line-clamp-1">
                             {dataset.name}
                           </span>
                         </div>

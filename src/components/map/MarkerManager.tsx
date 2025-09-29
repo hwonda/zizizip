@@ -10,6 +10,7 @@ import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Style, Fill, Stroke, Text, Icon } from 'ol/style';
 import { FeatureLike } from 'ol/Feature';
+import { createMapPinSVGDataUrl } from '@/utils/mapPinSvg';
 
 interface MarkerManagerProps {
   map: Map | null;
@@ -29,22 +30,9 @@ export default function MarkerManager({
   // 이전 locations 데이터를 저장하여 불필요한 업데이트 방지
   const prevLocationsRef = useRef<ExtendedLocationData[]>([]);
 
-  // MapPin 모양 아이콘 SVG 생성 함수 (Lucide 스타일)
+  // MapPin 모양 아이콘 SVG 생성 함수 (공통 유틸리티 사용)
   const createMapPinSVG = useCallback((color: string) => {
-    const svg = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" 
-              fill="${ color }" 
-              stroke="#ffffff" 
-              stroke-width="2"/>
-        <circle cx="12" cy="10" r="3" 
-                fill="#ffffff" 
-                stroke="${ color }" 
-                stroke-width="1"/>
-      </svg>
-    `;
-
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    return createMapPinSVGDataUrl(color, 24);
   }, []);
 
   // 마커 스타일 생성 함수 (데이터셋별 색상)
