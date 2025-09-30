@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { ExtendedLocationData } from '@/types';
+import { ExtendedLocationData, LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 
@@ -25,7 +25,7 @@ export default function MapPage() {
 
   // 데이터 상태
   const [locations, setLocations] = useState<ExtendedLocationData[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<ExtendedLocationData | null>(null);
+  const [selectedLocationGroup, setSelectedLocationGroup] = useState<LocationGroup | null>(null);
 
   // 지도 초기화 핸들러 (useCallback으로 메모이제이션)
   const handleMapInitialized = useCallback((map: Map, vectorSource: VectorSource) => {
@@ -62,12 +62,12 @@ export default function MapPage() {
               vectorSource={vectorSourceRef.current}
               locations={locations}
               showAllMarkers={showAllMarkers}
-              onMarkerClick={setSelectedLocation}
+              onMarkerClick={setSelectedLocationGroup}
             />
 
             <PopupOverlay
               map={mapRef.current}
-              selectedLocation={selectedLocation}
+              selectedLocationGroup={selectedLocationGroup}
             />
 
             <DebugPanel

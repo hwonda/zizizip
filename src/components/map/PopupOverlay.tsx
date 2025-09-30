@@ -1,19 +1,20 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { LocationData } from '@/types';
+import { useEffect, useRef, useState } from 'react';
+import { LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import { fromLonLat } from 'ol/proj';
 
 interface PopupOverlayProps {
   map: Map | null;
-  selectedLocation: LocationData | null;
+  selectedLocationGroup: LocationGroup | null;
 }
 
-export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProps) {
+export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverlayProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);
+  const [selectedUnitIndex, setSelectedUnitIndex] = useState<number>(0);
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
@@ -66,13 +67,20 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
     };
   }, [map]);
 
+  // 그룹이 변경될 때 첫 번째 유닛으로 초기화
+  useEffect(() => {
+    if (selectedLocationGroup && selectedLocationGroup.units.length > 0) {
+      setSelectedUnitIndex(0);
+    }
+  }, [selectedLocationGroup]);
+
   // 선택된 위치에 따라 팝업 위치 업데이트 및 지도 이동
   useEffect(() => {
     if (!map || !overlayRef.current) return;
 
-    if (selectedLocation && selectedLocation.lon && selectedLocation.lat) {
-      console.log(`팝업 위치 설정: [${ selectedLocation.lon }, ${ selectedLocation.lat }]`);
-      const coordinates = fromLonLat([selectedLocation.lon, selectedLocation.lat]);
+    if (selectedLocationGroup && selectedLocationGroup.lon && selectedLocationGroup.lat) {
+      console.log(`팝업 위치 설정: [${ selectedLocationGroup.lon }, ${ selectedLocationGroup.lat }]`);
+      const coordinates = fromLonLat([selectedLocationGroup.lon, selectedLocationGroup.lat]);
       overlayRef.current.setPosition(coordinates);
 
       // 선택된 위치로 지도 중앙 이동 및 줌인
@@ -94,104 +102,146 @@ export default function PopupOverlay({ map, selectedLocation }: PopupOverlayProp
         popupRef.current.style.display = 'none';
       }
     }
-  }, [map, selectedLocation]);
+  }, [map, selectedLocationGroup]);
+
+  // 현재 선택된 유닛 정보
+  const selectedUnit = selectedLocationGroup?.units[selectedUnitIndex];
+
+  // 팝업 내부 클릭 이벤트 처리 함수
+  const handlePopupClick = (e: React.MouseEvent) => {
+    // 이벤트 버블링 중지하여 지도 클릭 이벤트 발생 방지
+    e.stopPropagation();
+  };
 
   return (
     <div
       ref={popupRef}
-      className="absolute bg-background-80 bg-background p-3 rounded-lg shadow-lg transform pointer-events-none shadow-lg"
+      className="absolute bg-background p-3 rounded-lg shadow-lg pointer-events-auto z-50 ol-popup"
+      onClick={handlePopupClick}
     >
-      {selectedLocation && (
-        <div className="w-72 max-w-xs">
-          <h3 className="font-bold text-lg mb-1">{selectedLocation.name}</h3>
-          <p className="text-gray-6 text-sm mb-2">{selectedLocation.address}</p>
+      {selectedLocationGroup && selectedUnit && (
+        <div className="w-80 max-w-sm">
+          {/* 헤더 */}
+          <div className="mb-3">
+            <h3 className="font-bold text-lg mb-1">{selectedLocationGroup.name}</h3>
+            <p className="text-gray-6 text-sm">{selectedLocationGroup.address}</p>
+          </div>
 
+          {/* 유닛 탭 (여러 개인 경우만) */}
+          {selectedLocationGroup.units.length > 1 && (
+            <div className="mb-3">
+              <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                {selectedLocationGroup.units.map((unit, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedUnitIndex(index)}
+                    className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                      index === selectedUnitIndex
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-8 text-gray-4 hover:bg-gray-7'
+                    }`}
+                  >
+                    {unit.building && unit.unit
+                      ? `${ unit.building }동 ${ unit.unit }호`
+                      : unit.building
+                        ? `${ unit.building }동`
+                        : unit.unit
+                          ? `${ unit.unit }호`
+                          : `유닛 ${ index + 1 }`
+                    }
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 선택된 유닛 정보 */}
           <div className="flex flex-col gap-1 text-sm">
             {/* 기본 정보 */}
-            {(selectedLocation.building || selectedLocation.unit) && (
+            {(selectedUnit.building || selectedUnit.unit) && (
               <div className="flex gap-2">
-                {selectedLocation.building && (
-                  <span className="text-gray-4">{selectedLocation.building}{'동'}</span>
+                {selectedUnit.building && (
+                  <span className="text-gray-4">{selectedUnit.building}{'동'}</span>
                 )}
-                {selectedLocation.unit && (
-                  <span className="text-gray-4">{selectedLocation.unit}{'호'}</span>
+                {selectedUnit.unit && (
+                  <span className="text-gray-4">{selectedUnit.unit}{'호'}</span>
                 )}
               </div>
             )}
 
             {/* 면적 정보 */}
-            {(selectedLocation.exclusiveArea || selectedLocation.livingArea || selectedLocation.totalArea) && (
+            {(selectedUnit.exclusiveArea || selectedUnit.livingArea || selectedUnit.totalArea) && (
               <div className="flex flex-col gap-0.5">
-                {selectedLocation.exclusiveArea && (
+                {selectedUnit.exclusiveArea && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'전용면적'}</span>
-                    <span className="text-gray-2">{formatArea(selectedLocation.exclusiveArea)}</span>
+                    <span className="text-gray-2">{formatArea(selectedUnit.exclusiveArea)}</span>
                   </div>
                 )}
-                {selectedLocation.livingArea && (
+                {selectedUnit.livingArea && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'주거공용'}</span>
-                    <span className="text-gray-2">{formatArea(selectedLocation.livingArea)}</span>
+                    <span className="text-gray-2">{formatArea(selectedUnit.livingArea)}</span>
                   </div>
                 )}
-                {selectedLocation.totalArea && (
+                {selectedUnit.totalArea && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'면적계'}</span>
-                    <span className="text-gray-2">{formatArea(selectedLocation.totalArea)}</span>
+                    <span className="text-gray-2">{formatArea(selectedUnit.totalArea)}</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* 기타 정보 */}
-            {(selectedLocation.rooms || selectedLocation.floor || selectedLocation.elevator !== undefined || selectedLocation.houseType) && (
+            {(selectedUnit.rooms || selectedUnit.floor || selectedLocationGroup.elevator !== undefined || selectedLocationGroup.houseType) && (
               <div className="flex flex-col gap-0.5">
-                {selectedLocation.rooms && (
+                {selectedUnit.rooms && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'방수'}</span>
-                    <span className="text-gray-2">{selectedLocation.rooms}{'개'}</span>
+                    <span className="text-gray-2">{selectedUnit.rooms}{'개'}</span>
                   </div>
                 )}
-                {selectedLocation.floor && (
+                {selectedUnit.floor && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'층수'}</span>
-                    <span className="text-gray-2">{formatFloor(selectedLocation.floor)}</span>
+                    <span className="text-gray-2">{formatFloor(selectedUnit.floor)}</span>
                   </div>
                 )}
-                {selectedLocation.elevator !== undefined && (
+                {selectedLocationGroup.elevator !== undefined && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'승강기'}</span>
-                    <span className="text-gray-2">{selectedLocation.elevator ? '있음' : '없음'}</span>
+                    <span className="text-gray-2">{selectedLocationGroup.elevator ? '있음' : '없음'}</span>
                   </div>
                 )}
-                {selectedLocation.houseType && (
+                {selectedLocationGroup.houseType && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'주택유형'}</span>
-                    <span className="text-gray-2">{selectedLocation.houseType}</span>
+                    <span className="text-gray-2">{selectedLocationGroup.houseType}</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* 가격 정보 */}
-            {selectedLocation.price && (selectedLocation.price.deposit || selectedLocation.price.monthly || selectedLocation.price.sale) && (
+            {selectedUnit.price && (selectedUnit.price.deposit || selectedUnit.price.monthly || selectedUnit.price.sale) && (
               <div className="flex flex-col gap-0.5 mt-1 pt-1 border-t border-gray-8">
-                {selectedLocation.price.deposit && (
+                {selectedUnit.price.deposit && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'보증금'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.deposit)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.deposit)}</span>
                   </div>
                 )}
-                {selectedLocation.price.monthly && (
+                {selectedUnit.price.monthly && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'월임대료'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.monthly)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.monthly)}</span>
                   </div>
                 )}
-                {selectedLocation.price.sale && (
+                {selectedUnit.price.sale && (
                   <div className="flex justify-between">
                     <span className="text-gray-5">{'매매가'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedLocation.price.sale)}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.sale)}</span>
                   </div>
                 )}
               </div>

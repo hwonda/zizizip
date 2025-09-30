@@ -6,11 +6,11 @@ import { LocationData, LocationDataset, ExtendedLocationData } from '@/types';
 // 데이터셋별 색상 팔레트
 const dataColors = [
   '#9b59b6', // 보라
-  '#f39c12', // 주황
+  '#34495e', // 회색
   '#e74c3c', // 빨강
+  '#f39c12', // 주황
   '#3498db', // 파랑
   '#2ecc71', // 초록
-  '#34495e', // 회색
 ];
 
 interface DatasetManagerState {

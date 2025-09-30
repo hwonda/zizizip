@@ -66,3 +66,16 @@ export interface ExtendedLocationData extends LocationData {
   datasetName: string;
   datasetColor: string;
 }
+
+// 같은 좌표의 여러 유닛을 그룹화하는 타입
+export interface LocationGroup {
+  id: string; // 좌표 기반의 고유 ID (lat_lon 형태)
+  lat: number;
+  lon: number;
+  units: ExtendedLocationData[]; // 같은 좌표의 여러 유닛들
+  // 대표 정보 (첫 번째 유닛의 정보)
+  name: string;
+  address: string;
+  houseType?: string;
+  elevator?: boolean;
+}
