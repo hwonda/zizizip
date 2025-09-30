@@ -68,6 +68,7 @@ export default function MapPage() {
             <PopupOverlay
               map={mapRef.current}
               selectedLocationGroup={selectedLocationGroup}
+              onClose={() => setSelectedLocationGroup(null)}
             />
 
             <DebugPanel

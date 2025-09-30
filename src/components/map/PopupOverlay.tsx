@@ -5,16 +5,33 @@ import { LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import { fromLonLat } from 'ol/proj';
+import { Clipboard, ClipboardCheck, X } from 'lucide-react';
+
+interface BadgeProps {
+  title?: string;
+  text: string;
+}
+
+const Badge = ({ title, text }: BadgeProps) => {
+  return (
+    <div className="flex items-center gap-0.5 border border-gray-8 rounded-md px-2 py-0.5 text-sm">
+      <span className="text-gray-5">{title}</span>
+      <span className="text-gray-2">{text}</span>
+    </div>
+  );
+};
 
 interface PopupOverlayProps {
   map: Map | null;
   selectedLocationGroup: LocationGroup | null;
+  onClose: ()=> void;
 }
 
-export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverlayProps) {
+export default function PopupOverlay({ map, selectedLocationGroup, onClose }: PopupOverlayProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const [selectedUnitIndex, setSelectedUnitIndex] = useState<number>(0);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
@@ -28,11 +45,6 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
   // 면적 포맷팅 함수
   const formatArea = (area: number) => {
     return `${ area.toLocaleString() }㎡`;
-  };
-
-  // 층수 포맷팅 함수
-  const formatFloor = (floor: number) => {
-    return `${ floor }층`;
   };
 
   // 팝업 오버레이 초기화
@@ -51,7 +63,7 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
       id: 'popup',
       element: popupRef.current,
       positioning: 'bottom-center',
-      stopEvent: false,
+      stopEvent: true, // 팝업에서 발생하는 모든 이벤트를 중지
       offset: [-20, 25],
     });
 
@@ -107,38 +119,91 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
   // 현재 선택된 유닛 정보
   const selectedUnit = selectedLocationGroup?.units[selectedUnitIndex];
 
-  // 팝업 내부 클릭 이벤트 처리 함수
-  const handlePopupClick = (e: React.MouseEvent) => {
-    // 이벤트 버블링 중지하여 지도 클릭 이벤트 발생 방지
-    e.stopPropagation();
+  // 클립보드에 주소 복사
+  const copyAddressToClipboard = async () => {
+    if (!selectedLocationGroup?.address) return;
+
+    try {
+      await navigator.clipboard.writeText(selectedLocationGroup.address);
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.log('주소 복사에 실패했습니다:', error);
+    }
   };
 
   return (
     <div
       ref={popupRef}
       className="absolute bg-background p-3 rounded-lg shadow-lg pointer-events-auto z-50 ol-popup"
-      onClick={handlePopupClick}
     >
       {selectedLocationGroup && selectedUnit && (
-        <div className="w-80 max-w-sm">
+        <div className="w-100 flex flex-col gap-1.5">
           {/* 헤더 */}
-          <div className="mb-3">
-            <h3 className="font-bold text-lg mb-1">{selectedLocationGroup.name}</h3>
-            <p className="text-gray-6 text-sm">{selectedLocationGroup.address}</p>
+          <div className="border-b border-gray-9">
+            <div className="flex justify-between items-center gap-1.5">
+              <h3 className="font-bold">{selectedLocationGroup.name}</h3>
+              <button
+                type="button"
+                title="팝업 닫기"
+                onClick={onClose}
+                className="flex-shrink-0 p-1 transition-colors text-error hover:text-secondary transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-0.5">
+              {selectedUnit.houseType && <Badge text={selectedUnit.houseType} />}
+              {selectedUnit.elevator !== undefined && <Badge title="승강기" text={selectedUnit.elevator ? 'O' : 'X'} />}
+            </div>
+            <span className="flex items-start gap-0.5 py-1.5">
+              <p
+                className="text-gray-3 text-sm select-text cursor-text"
+                style={{ userSelect: 'text' }}
+              >
+                {selectedLocationGroup.address}
+              </p>
+              <button
+                onClick={copyAddressToClipboard}
+                className={`flex-shrink-0 p-0.5 transition-colors ${
+                  isCopied
+                    ? 'text-primary'
+                    : 'text-gray-5 hover:text-gray-3'
+                }`}
+                title={isCopied ? '주소 복사 완료' : '주소 복사'}
+                type="button"
+              >
+                {isCopied ? (
+                  <ClipboardCheck className="w-4 h-4" />
+                ) : (
+                  <Clipboard className="w-4 h-4" />
+                )}
+              </button>
+            </span>
           </div>
 
-          {/* 유닛 탭 (여러 개인 경우만) */}
-          {selectedLocationGroup.units.length > 1 && (
-            <div className="mb-3">
-              <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+          {/* 유닛 탭 */}
+          {selectedLocationGroup.units.length > 0 && (
+            <div className="py-1">
+              {/* {selectedLocationGroup.units.length > 1 && (
+                <div className="text-gray-3 text-sm font-medium flex items-center gap-0.5 mb-1">
+                  <MousePointer2 className="w-4 h-4 text-gray-5" />
+                  {'호실 선택'}
+                </div>
+              )} */}
+              <div className="flex flex-wrap gap-1">
                 {selectedLocationGroup.units.map((unit, index) => (
                   <button
+                    type="button"
+                    title={`${ index + 1 }번째 주택 정보로 이동`}
                     key={index}
                     onClick={() => setSelectedUnitIndex(index)}
                     className={`px-2 py-1 text-xs rounded-md transition-colors ${
                       index === selectedUnitIndex
                         ? 'bg-primary text-white'
-                        : 'bg-gray-8 text-gray-4 hover:bg-gray-7'
+                        : 'bg-gray-9 text-gray-3 hover:bg-gray-8'
                     }`}
                   >
                     {unit.building && unit.unit
@@ -156,20 +221,47 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
           )}
 
           {/* 선택된 유닛 정보 */}
-          <div className="flex flex-col gap-1 text-sm">
-            {/* 기본 정보 */}
-            {(selectedUnit.building || selectedUnit.unit) && (
+          <div className="flex flex-col gap-1">
+            {/* {(selectedUnit.building || selectedUnit.unit) && (
               <div className="flex gap-2">
                 {selectedUnit.building && (
-                  <span className="text-gray-4">{selectedUnit.building}{'동'}</span>
+                  <span className="text-gray-3">{selectedUnit.building}{'동'}</span>
                 )}
                 {selectedUnit.unit && (
-                  <span className="text-gray-4">{selectedUnit.unit}{'호'}</span>
+                  <span className="text-gray-3">{selectedUnit.unit}{'호'}{' 정보'}</span>
+                )}
+              </div>
+            )} */}
+            {/* 가격 정보 */}
+            {selectedUnit.price && (selectedUnit.price.deposit || selectedUnit.price.monthly || selectedUnit.price.sale) && (
+              <div className="flex flex-col gap-0.5 border border-secondary rounded-md p-1 text-sm">
+                {selectedUnit.price.deposit && (
+                  <div className="flex justify-between gap-1">
+                    <span className="text-gray-3">{'보증금'}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.deposit)}</span>
+                  </div>
+                )}
+                {selectedUnit.price.monthly && (
+                  <div className="flex justify-between gap-1">
+                    <span className="text-gray-3">{'월임대료'}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.monthly)}</span>
+                  </div>
+                )}
+                {selectedUnit.price.sale && (
+                  <div className="flex justify-between gap-1">
+                    <span className="text-gray-3">{'매매가'}</span>
+                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.sale)}</span>
+                  </div>
                 )}
               </div>
             )}
-
-            {/* 면적 정보 */}
+            <div className="flex flex-wrap gap-0.5 text-sm">
+              {selectedUnit.floor && <Badge text={selectedUnit.floor.toString() + '층'} />}
+              {selectedUnit.exclusiveArea && <Badge title="전용" text={formatArea(selectedUnit.exclusiveArea)} />}
+              {selectedUnit.rooms && <Badge title="방" text={selectedUnit.rooms.toString() + '개'} />}
+              {selectedUnit.livingArea && <Badge title="공용" text={formatArea(selectedUnit.livingArea)} />}
+            </div>
+            {/*
             {(selectedUnit.exclusiveArea || selectedUnit.livingArea || selectedUnit.totalArea) && (
               <div className="flex flex-col gap-0.5">
                 {selectedUnit.exclusiveArea && (
@@ -192,8 +284,6 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
                 )}
               </div>
             )}
-
-            {/* 기타 정보 */}
             {(selectedUnit.rooms || selectedUnit.floor || selectedLocationGroup.elevator !== undefined || selectedLocationGroup.houseType) && (
               <div className="flex flex-col gap-0.5">
                 {selectedUnit.rooms && (
@@ -221,31 +311,7 @@ export default function PopupOverlay({ map, selectedLocationGroup }: PopupOverla
                   </div>
                 )}
               </div>
-            )}
-
-            {/* 가격 정보 */}
-            {selectedUnit.price && (selectedUnit.price.deposit || selectedUnit.price.monthly || selectedUnit.price.sale) && (
-              <div className="flex flex-col gap-0.5 mt-1 pt-1 border-t border-gray-8">
-                {selectedUnit.price.deposit && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'보증금'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.deposit)}</span>
-                  </div>
-                )}
-                {selectedUnit.price.monthly && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'월임대료'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.monthly)}</span>
-                  </div>
-                )}
-                {selectedUnit.price.sale && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'매매가'}</span>
-                    <span className="text-primary font-medium">{formatPrice(selectedUnit.price.sale)}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            )} */}
           </div>
         </div>
       )}

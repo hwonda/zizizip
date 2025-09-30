@@ -366,7 +366,7 @@ export async function POST(request: NextRequest) {
       unit: ['호'],
       exclusiveArea: ['전용면적', '전용'],
       livingArea: ['주거공용면적', '주거공용', '공용면적'],
-      totalArea: ['면적계', '총면적', '계'],
+      totalArea: ['면적계', '총면적', '계', '실사용'],
       rooms: ['방수', '방'],
       floor: ['층수', '층'],
       elevator: ['승강기'],
@@ -431,6 +431,16 @@ export async function POST(request: NextRequest) {
     const parseBoolean = (value: string | undefined): boolean | undefined => {
       if (!value) return undefined;
       const lowerValue = value.toLowerCase().trim();
+
+      // 'Y'/'N' 문자열 처리
+      if (lowerValue === 'y') {
+        return true;
+      }
+      if (lowerValue === 'n') {
+        return false;
+      }
+
+      // 기존 로직 유지
       if (lowerValue.includes('있') || lowerValue.includes('유') || lowerValue === 'o' || lowerValue === 'yes') {
         return true;
       }
