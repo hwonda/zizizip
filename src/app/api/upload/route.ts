@@ -387,9 +387,16 @@ export async function POST(request: NextRequest) {
       headers.some((header) => header.includes(addressVariant)),
     );
 
-    if (!hasName || !hasAddress) {
+    if (!hasName) {
       return NextResponse.json(
-        { success: false, error: 'CSV must contain name and address columns' },
+        { success: false, error: '이름 컬럼(이름, 명칭, 물건명, 주택군 등)이 필요합니다.' },
+        { status: 400 },
+      );
+    }
+
+    if (!hasAddress) {
+      return NextResponse.json(
+        { success: false, error: '주소 컬럼(주소, 소재지, 위치 등)이 필요합니다.' },
         { status: 400 },
       );
     }
