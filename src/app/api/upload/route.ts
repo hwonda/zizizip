@@ -376,6 +376,28 @@ export async function POST(request: NextRequest) {
       priceSale: ['매매가', '매매'],
     };
 
+    // 여러 가격 컬럼을 찾는 함수
+    const findMultiplePriceColumns = (headers: string[]) => {
+      const depositColumns: number[] = [];
+      const monthlyColumns: number[] = [];
+      const saleColumns: number[] = [];
+
+      headers.forEach((header, index) => {
+        const trimmedHeader = header.trim();
+        if (columnMappings.priceDeposit.some((variant) => trimmedHeader.includes(variant))) {
+          depositColumns.push(index);
+        }
+        if (columnMappings.priceMonthly.some((variant) => trimmedHeader.includes(variant))) {
+          monthlyColumns.push(index);
+        }
+        if (columnMappings.priceSale.some((variant) => trimmedHeader.includes(variant))) {
+          saleColumns.push(index);
+        }
+      });
+
+      return { depositColumns, monthlyColumns, saleColumns };
+    };
+
     // 헤더 확인 (이름과 주소만 필수)
     const headers = data[0].map((header: string) => header.trim());
 
@@ -427,6 +449,10 @@ export async function POST(request: NextRequest) {
       priceSale: getColumnIndex(columnMappings.priceSale),
     };
 
+    // 여러 가격 컬럼 찾기
+    const multiplePriceColumns = findMultiplePriceColumns(headers);
+    console.log('발견된 가격 컬럼들:', multiplePriceColumns);
+
     // 유틸리티 함수들
     const parseNumber = (value: string | undefined): number | undefined => {
       if (!value) return undefined;
@@ -473,10 +499,61 @@ export async function POST(request: NextRequest) {
         const address = getValue(row, columnIndices.address);
 
         if (name && address) {
-          // 가격 정보 파싱
-          const deposit = parseNumber(getValue(row, columnIndices.priceDeposit));
-          const monthly = parseNumber(getValue(row, columnIndices.priceMonthly));
+          // 매매가 파싱 (항상 단일)
           const sale = parseNumber(getValue(row, columnIndices.priceSale));
+
+          // 임대 관련 가격 세트 개수 결정 (보증금과 월임대료 컬럼 수의 최대값)
+          const maxRentalSets = Math.max(
+            multiplePriceColumns.depositColumns.length,
+            multiplePriceColumns.monthlyColumns.length,
+          );
+
+          let price: { deposit?: number; monthly?: number; sale?: number } | undefined;
+          let priceSets: Array<{
+            deposit?: number;
+            monthly?: number;
+            label?: string;
+          }> | undefined;
+
+          if (sale) {
+            // 매매가가 있는 경우: price만 사용, priceSets는 undefined
+            price = { sale };
+          } else if (maxRentalSets > 1) {
+            // 임대 관련 가격이 2개 이상인 경우: priceSets 사용, price는 undefined
+            const rentalSets: Array<{
+              deposit?: number;
+              monthly?: number;
+              label?: string;
+            }> = [];
+
+            for (let priceIndex = 0; priceIndex < maxRentalSets; priceIndex++) {
+              const setDeposit = multiplePriceColumns.depositColumns[priceIndex] !== undefined
+                ? parseNumber(getValue(row, multiplePriceColumns.depositColumns[priceIndex]))
+                : undefined;
+              const setMonthly = multiplePriceColumns.monthlyColumns[priceIndex] !== undefined
+                ? parseNumber(getValue(row, multiplePriceColumns.monthlyColumns[priceIndex]))
+                : undefined;
+
+              // 적어도 하나의 임대 가격 정보가 있는 경우에만 추가
+              if (setDeposit || setMonthly) {
+                rentalSets.push({
+                  deposit: setDeposit,
+                  monthly: setMonthly,
+                  label: `임대조건 ${ priceIndex + 1 }`,
+                });
+              }
+            }
+
+            priceSets = rentalSets.length > 0 ? rentalSets : undefined;
+          } else {
+            // 임대 관련 가격이 1개인 경우: price만 사용
+            const deposit = parseNumber(getValue(row, columnIndices.priceDeposit));
+            const monthly = parseNumber(getValue(row, columnIndices.priceMonthly));
+
+            if (deposit || monthly) {
+              price = { deposit, monthly };
+            }
+          }
 
           const location: LocationData = {
             name,
@@ -492,12 +569,9 @@ export async function POST(request: NextRequest) {
             elevator: parseBoolean(getValue(row, columnIndices.elevator)),
             houseType: getValue(row, columnIndices.houseType),
 
-            // 가격 정보 (계층적 구조)
-            price: (deposit || monthly || sale) ? {
-              deposit,
-              monthly,
-              sale,
-            } : undefined,
+            // 가격 정보
+            price,
+            priceSets,
           };
 
           // 주소 지오코딩

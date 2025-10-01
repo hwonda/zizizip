@@ -14,7 +14,7 @@ interface BadgeProps {
 
 const Badge = ({ title, text }: BadgeProps) => {
   return (
-    <div className="flex items-center gap-0.5 border border-gray-8 rounded-md px-2 py-0.5 text-sm">
+    <div className="flex items-center gap-0.5 border border-dashed border-gray-8 rounded-full px-2 py-0.5 text-sm">
       <span className="text-gray-5">{title}</span>
       <span className="text-gray-2">{text}</span>
     </div>
@@ -142,7 +142,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
       {selectedLocationGroup && selectedUnit && (
         <div className="w-100 flex flex-col gap-1.5">
           {/* 헤더 */}
-          <div className="border-b border-gray-9">
+          <div className="border-b border-gray-9 space-y-1 pb-1">
             <div className="flex justify-between items-center gap-1.5">
               <h3 className="font-bold">{selectedLocationGroup.name}</h3>
               <button
@@ -158,7 +158,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
               {selectedUnit.houseType && <Badge text={selectedUnit.houseType} />}
               {selectedUnit.elevator !== undefined && <Badge title="승강기" text={selectedUnit.elevator ? 'O' : 'X'} />}
             </div>
-            <span className="flex items-start gap-0.5 py-1.5">
+            <span className="flex items-start gap-0.5">
               <p
                 className="text-gray-3 text-sm select-text cursor-text"
                 style={{ userSelect: 'text' }}
@@ -186,7 +186,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
 
           {/* 유닛 탭 */}
           {selectedLocationGroup.units.length > 0 && (
-            <div className="py-1">
+            <div className="py-0.5">
               {/* {selectedLocationGroup.units.length > 1 && (
                 <div className="text-gray-3 text-sm font-medium flex items-center gap-0.5 mb-1">
                   <MousePointer2 className="w-4 h-4 text-gray-5" />
@@ -202,7 +202,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
                     onClick={() => setSelectedUnitIndex(index)}
                     className={`px-2 py-1 text-xs rounded-md transition-colors ${
                       index === selectedUnitIndex
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-white font-bold'
                         : 'bg-gray-9 text-gray-3 hover:bg-gray-8'
                     }`}
                   >
@@ -220,6 +220,13 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
             </div>
           )}
 
+          <div className="flex flex-wrap gap-1 text-sm">
+            {selectedUnit.floor && <Badge text={selectedUnit.floor.toString() + '층'} />}
+            {selectedUnit.exclusiveArea && <Badge title="전용" text={formatArea(selectedUnit.exclusiveArea)} />}
+            {selectedUnit.rooms && <Badge title="방" text={selectedUnit.rooms.toString() + '개'} />}
+            {selectedUnit.livingArea && <Badge title="공용" text={formatArea(selectedUnit.livingArea)} />}
+          </div>
+
           {/* 선택된 유닛 정보 */}
           <div className="flex flex-col gap-1">
             {/* {(selectedUnit.building || selectedUnit.unit) && (
@@ -233,85 +240,55 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
               </div>
             )} */}
             {/* 가격 정보 */}
-            {selectedUnit.price && (selectedUnit.price.deposit || selectedUnit.price.monthly || selectedUnit.price.sale) && (
-              <div className="flex flex-col gap-0.5 border border-secondary rounded-md p-1 text-sm">
+            {/* 여러 가격 세트가 있는 경우 */}
+            {selectedUnit.priceSets && !selectedUnit.price && (
+              <div className="grid grid-cols-2 gap-1">
+                {selectedUnit.priceSets.map((priceSet, index) => (
+                  <div key={index} className="group flex flex-col gap-0.5 border border-gray-8 hover:border-secondary hover:bg-secondary/5 rounded-md p-1 text-sm">
+                    {priceSet.label && (
+                      <div className="text-xs text-gray-3 font-medium border-b border-gray-9 pb-0.5 mb-0.5">
+                        {priceSet.label}
+                      </div>
+                    )}
+                    {priceSet.deposit && (
+                      <div className="flex justify-between gap-1">
+                        <span className="text-sub">{'보증금'}</span>
+                        <span className="text-primary font-medium">{formatPrice(priceSet.deposit)}</span>
+                      </div>
+                    )}
+                    {priceSet.monthly && (
+                      <div className="flex justify-between gap-1">
+                        <span className="text-sub">{'월임대료'}</span>
+                        <span className="text-primary font-medium">{formatPrice(priceSet.monthly)}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* 단일 가격 정보 */}
+            {!selectedUnit.priceSets && selectedUnit.price && (
+              <div className="flex flex-col gap-0.5 border border-gray-8 hover:border-secondary hover:bg-secondary/5 rounded-md p-1 text-sm">
                 {selectedUnit.price.deposit && (
                   <div className="flex justify-between gap-1">
-                    <span className="text-gray-3">{'보증금'}</span>
+                    <span className="text-sub">{'보증금'}</span>
                     <span className="text-primary font-medium">{formatPrice(selectedUnit.price.deposit)}</span>
                   </div>
                 )}
                 {selectedUnit.price.monthly && (
                   <div className="flex justify-between gap-1">
-                    <span className="text-gray-3">{'월임대료'}</span>
+                    <span className="text-sub">{'월임대료'}</span>
                     <span className="text-primary font-medium">{formatPrice(selectedUnit.price.monthly)}</span>
                   </div>
                 )}
                 {selectedUnit.price.sale && (
                   <div className="flex justify-between gap-1">
-                    <span className="text-gray-3">{'매매가'}</span>
+                    <span className="text-sub">{'매매가'}</span>
                     <span className="text-primary font-medium">{formatPrice(selectedUnit.price.sale)}</span>
                   </div>
                 )}
               </div>
             )}
-            <div className="flex flex-wrap gap-0.5 text-sm">
-              {selectedUnit.floor && <Badge text={selectedUnit.floor.toString() + '층'} />}
-              {selectedUnit.exclusiveArea && <Badge title="전용" text={formatArea(selectedUnit.exclusiveArea)} />}
-              {selectedUnit.rooms && <Badge title="방" text={selectedUnit.rooms.toString() + '개'} />}
-              {selectedUnit.livingArea && <Badge title="공용" text={formatArea(selectedUnit.livingArea)} />}
-            </div>
-            {/*
-            {(selectedUnit.exclusiveArea || selectedUnit.livingArea || selectedUnit.totalArea) && (
-              <div className="flex flex-col gap-0.5">
-                {selectedUnit.exclusiveArea && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'전용면적'}</span>
-                    <span className="text-gray-2">{formatArea(selectedUnit.exclusiveArea)}</span>
-                  </div>
-                )}
-                {selectedUnit.livingArea && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'주거공용'}</span>
-                    <span className="text-gray-2">{formatArea(selectedUnit.livingArea)}</span>
-                  </div>
-                )}
-                {selectedUnit.totalArea && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'면적계'}</span>
-                    <span className="text-gray-2">{formatArea(selectedUnit.totalArea)}</span>
-                  </div>
-                )}
-              </div>
-            )}
-            {(selectedUnit.rooms || selectedUnit.floor || selectedLocationGroup.elevator !== undefined || selectedLocationGroup.houseType) && (
-              <div className="flex flex-col gap-0.5">
-                {selectedUnit.rooms && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'방수'}</span>
-                    <span className="text-gray-2">{selectedUnit.rooms}{'개'}</span>
-                  </div>
-                )}
-                {selectedUnit.floor && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'층수'}</span>
-                    <span className="text-gray-2">{formatFloor(selectedUnit.floor)}</span>
-                  </div>
-                )}
-                {selectedLocationGroup.elevator !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'승강기'}</span>
-                    <span className="text-gray-2">{selectedLocationGroup.elevator ? '있음' : '없음'}</span>
-                  </div>
-                )}
-                {selectedLocationGroup.houseType && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-5">{'주택유형'}</span>
-                    <span className="text-gray-2">{selectedLocationGroup.houseType}</span>
-                  </div>
-                )}
-              </div>
-            )} */}
           </div>
         </div>
       )}

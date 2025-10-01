@@ -21,6 +21,13 @@ export interface LocationData {
     monthly?: number; // 월임대료
   };
 
+  // 여러 임대 가격 세트를 지원하는 새로운 필드 (매매가는 제외)
+  priceSets?: Array<{
+    deposit?: number; // 임대보증금
+    monthly?: number; // 월임대료
+    label?: string; // 가격 세트 라벨 (예: "임대조건 1", "임대조건 2" 등)
+  }>;
+
   // 좌표
   lat?: number;
   lon?: number;
