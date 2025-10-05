@@ -15,8 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteMetadata.url),
   title: siteMetadata.title,
   description: siteMetadata.description,
+  keywords: ['부동산', '지도', '위치', 'CSV', 'Excel', 'LH', 'SH', '공공임대', '매물', '부동산 지도', '위치 검색'],
+  authors: [{ name: 'zizizip' }],
+  creator: 'zizizip',
+  publisher: 'zizizip',
   alternates: {
     canonical: siteMetadata.url,
   },
@@ -52,6 +57,23 @@ export const metadata: Metadata = {
     description: siteMetadata.description,
     images: [siteMetadata.thumbnailURL],
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: '',
+    other: {
+      'naver-site-verification': '',
+    },
+  },
 };
 
 export default function RootLayout({
@@ -60,7 +82,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      </head>
       <body
         className={`${ geistSans.variable } ${ geistMono.variable } antialiased`}
       >
