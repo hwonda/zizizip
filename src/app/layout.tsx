@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import QueryProvider from '@/components/providers/QueryProvider';
 import { siteMetadata } from '@/constants/metadata';
+import GoogleAnalytics from '@/constants/GoogleAnalytics';
 import '@/styles/globals.scss';
 
 const geistSans = Geist({
@@ -85,6 +86,7 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <GoogleAnalytics />
       </head>
       <body
         className={`${ geistSans.variable } ${ geistMono.variable } antialiased`}
