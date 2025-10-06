@@ -233,8 +233,8 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <h2 className="sr-only">{'CSV 파일 업로드'}</h2>
+    <div className="h-full bg-background/90 transition p-2 rounded-lg shadow-xl">
+      <h2 className="sr-only">{'엑셀(CSV, Excel) 파일 업로드'}</h2>
 
       {/* 파일 업로드 영역 */}
       <div className="space-y-4">
@@ -311,10 +311,10 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
       {/* 데이터셋 관리 섹션 */}
       {hasDatasets && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col mt-2">
+          <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-1">
-              {'업로드 목록'}{' ('}{selectedCount}{'/'}{totalDatasets}{')'}
+              {'목록'}{' ['}{selectedCount}{'/'}{totalDatasets}{']'}
             </h3>
             {totalDatasets > 1 && (
               <button
@@ -325,6 +325,9 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               </button>
             )}
           </div>
+          <span className="text-xs text-gray-5 mb-2">
+            {'최대 3개까지 업로드 가능합니다.'}
+          </span>
 
           <div className="space-y-2">
             {datasets.map((dataset) => {

@@ -68,13 +68,13 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
   return (
     <div className="relative w-full h-full">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div className="text-lg font-semibold">{'데이터 로딩 중...'}</div>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div className="text-lg font-semibold text-red-600">
             {'데이터 로드 중 오류가 발생했습니다.'}
           </div>
