@@ -37,7 +37,6 @@ export default function MapView({ onMapInitialized }: MapViewProps) {
       source: new XYZ({
         url: `https://api.vworld.kr/req/wmts/1.0.0/${ process.env.NEXT_PUBLIC_VWORLD_API_KEY }/Base/{z}/{y}/{x}.png`,
         crossOrigin: 'anonymous',
-        attributions: ['VWorld 베이스맵'],
       }),
     });
 
@@ -75,7 +74,7 @@ export default function MapView({ onMapInitialized }: MapViewProps) {
       mapInstanceRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 의존성 배열을 비워서 한 번만 실행되도록 수정
+  }, []);
 
   // onMapInitialized 함수 변경 시 별도 처리
   useEffect(() => {
