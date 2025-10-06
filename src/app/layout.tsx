@@ -4,6 +4,7 @@ import QueryProvider from '@/components/providers/QueryProvider';
 import { siteMetadata } from '@/constants/metadata';
 import GoogleAnalytics from '@/constants/GoogleAnalytics';
 import MicrosoftClarity from '@/constants/MicrosoftClarity';
+import StructuredData from '@/constants/StructuredData';
 import '@/styles/globals.scss';
 
 const geistSans = Geist({
@@ -87,13 +88,14 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <StructuredData />
         <GoogleAnalytics />
         <MicrosoftClarity />
       </head>
       <body
         className={`${ geistSans.variable } ${ geistMono.variable } antialiased`}
       >
-        <h1 className="sr-only">{'지지집, 간편한 부동산 위치 지도 서비스'}</h1>
+        <h1 className="sr-only">{'지지집 - 엑셀로 쉽게 부동산 정보를 지도에 표시하세요'}</h1>
         <QueryProvider>
           {children}
         </QueryProvider>
