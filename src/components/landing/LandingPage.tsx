@@ -201,7 +201,7 @@ export default function LandingPage() {
             )
               : (
                 <button
-                  className='text-gray-6 hover:text-primary transition duration-300'
+                  className='text-primary hover:text-secondary transition duration-300'
                   onClick={handlePausePlay}
                   aria-label='재생'
                 >
