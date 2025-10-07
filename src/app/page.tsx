@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import { siteMetadata } from '@/constants/metadata';
+import LandingPageClient from '@/components/landing/LandingPageClient';
 
 export const metadata: Metadata = {
   title: siteMetadata.title,
@@ -33,6 +33,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  // 홈 페이지 접속 시 대시보드로 리다이렉트
-  redirect('/map');
+  return <LandingPageClient />;
 }

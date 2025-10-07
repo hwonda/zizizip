@@ -6,6 +6,8 @@ $slide-duration: 0.7s;
 $gradient-duration: 0.5s;
 $bounce-duration: 1.5s;
 $gauge-duration: 0.8s;
+$slide-arrow-duration: 0.8s;
+$progress-duration: 10s;
 
 // 애니메이션 지연 변수
 $delays: (
@@ -70,6 +72,24 @@ $delays: (
   }
 }
 
+@keyframes slideArrow {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes expandWidth {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 // 애니메이션 미스인
 %base-animation {
   animation-fill-mode: forwards;
@@ -124,9 +144,37 @@ $delays: (
   width: 0;
   animation: fillGauge $gauge-duration ease-in-out forwards;
   animation-play-state: paused;
-  
+
   .group:hover & {
     animation-play-state: running;
+  }
+}
+
+.animate-slide-arrow {
+  .group:hover & {
+    animation: slideArrow $slide-arrow-duration ease-in-out infinite;
+  }
+}
+
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(to right, #ff9447, #ed6e13);
+    border-radius: inherit;
+    animation: expandWidth $progress-duration linear forwards;
+  }
+
+  &.paused::before {
+    animation: none;
+    width: 100%;
   }
 }
 
