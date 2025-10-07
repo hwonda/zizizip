@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UploadResponse, ExtendedLocationData } from '@/types';
 import { useDatasetManager } from '@/hooks/useDatasetManager';
-import { Upload, File, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import MapPinIcon from '@/components/icons/MapPinIcon';
 import {
   validateUploadResult,

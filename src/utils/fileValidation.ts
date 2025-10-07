@@ -1,4 +1,5 @@
 import { LocationData } from '@/types';
+import { findHeaderRowIndex } from './csvParser';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -148,7 +149,7 @@ export const validateCSVContent = async (file: File): Promise<string | null> => 
     const isCSV = file.name.endsWith('.csv');
     const isXLSX = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
 
-    let headerRow: string = '';
+    let data: string[][] = [];
 
     if (isCSV) {
       // CSV 파일 처리
@@ -159,52 +160,42 @@ export const validateCSVContent = async (file: File): Promise<string | null> => 
         return '파일이 비어있습니다.';
       }
 
-      if (lines.length === 1) {
-        return '헤더만 있고 데이터가 없습니다.';
-      }
-
-      headerRow = lines[0].toLowerCase();
+      // CSV를 2차원 배열로 변환 (간단한 파싱)
+      data = lines.map((line) => line.split(',').map((cell) => cell.trim()));
     } else if (isXLSX) {
       // Excel 파일 처리
       const arrayBuffer = await file.arrayBuffer();
-      // xlsx 라이브러리를 동적으로 import해서 사용
       const XLSX = await import('xlsx');
 
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
 
-      const data = XLSX.utils.sheet_to_json(worksheet, {
+      data = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
         defval: '',
         raw: false,
       }) as string[][];
 
-      const filteredData = data.filter((row) => row.some((cell) => cell && cell.toString().trim()));
-
-      if (filteredData.length === 0) {
-        return '파일이 비어있습니다.';
-      }
-
-      if (filteredData.length === 1) {
-        return '헤더만 있고 데이터가 없습니다.';
-      }
-
-      headerRow = filteredData[0].join(',').toLowerCase();
+      data = data.filter((row) => row.some((cell) => cell && cell.toString().trim()));
     } else {
       return '지원하지 않는 파일 형식입니다.';
     }
 
-    // 헤더 검증 (필수 컬럼이 있는지 확인)
-    const hasName = headerRow.includes('이름') || headerRow.includes('명칭') || headerRow.includes('물건명') || headerRow.includes('주택군');
-    const hasAddress = headerRow.includes('주소') || headerRow.includes('소재지') || headerRow.includes('위치');
-
-    if (!hasName) {
-      return '이름 컬럼(이름, 명칭, 물건명, 주택군 등)이 필요합니다.';
+    if (data.length === 0) {
+      return '파일이 비어있습니다.';
     }
 
-    if (!hasAddress) {
-      return '주소 컬럼(주소, 소재지, 위치 등)이 필요합니다.';
+    // csvParser 유틸리티로 헤더 row 찾기
+    const headerIndex = findHeaderRowIndex(data);
+
+    if (headerIndex === -1) {
+      return '유효한 헤더를 찾을 수 없습니다. \'이름\'과 \'주소\' 컬럼이 포함된 행이 필요합니다.';
+    }
+
+    // 헤더 이후 데이터가 있는지 확인
+    if (headerIndex >= data.length - 1) {
+      return '헤더만 있고 데이터가 없습니다.';
     }
 
     return null;

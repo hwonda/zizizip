@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'papaparse';
 import * as XLSX from 'xlsx';
 import { LocationData } from '@/types';
+import { extractDataFromHeaderRow } from '@/utils/csvParser';
 
 // 간단한 인메모리 캐시 구현
 interface CacheItem<T> {
@@ -358,6 +359,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 헤더 row 찾기 및 데이터 추출
+    let headerRow: string[];
+    let dataRows: string[][];
+
+    try {
+      const extracted = extractDataFromHeaderRow(data);
+      headerRow = extracted.headerRow;
+      dataRows = extracted.dataRows;
+      console.log(`헤더 row 발견: ${ extracted.headerIndex + 1 }번째 행`);
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: error instanceof Error ? error.message : '헤더를 찾을 수 없습니다' },
+        { status: 400 },
+      );
+    }
+
     // 컬럼 매핑 정의
     const columnMappings = {
       name: ['이름', '명칭', '물건명', '주택군'],
@@ -398,30 +415,8 @@ export async function POST(request: NextRequest) {
       return { depositColumns, monthlyColumns, saleColumns };
     };
 
-    // 헤더 확인 (이름과 주소만 필수)
-    const headers = data[0].map((header: string) => header.trim());
-
-    // 필수 컬럼 확인
-    const hasName = columnMappings.name.some((nameVariant) =>
-      headers.some((header) => header.includes(nameVariant)),
-    );
-    const hasAddress = columnMappings.address.some((addressVariant) =>
-      headers.some((header) => header.includes(addressVariant)),
-    );
-
-    if (!hasName) {
-      return NextResponse.json(
-        { success: false, error: '이름 컬럼(이름, 명칭, 물건명, 주택군 등)이 필요합니다.' },
-        { status: 400 },
-      );
-    }
-
-    if (!hasAddress) {
-      return NextResponse.json(
-        { success: false, error: '주소 컬럼(주소, 소재지, 위치 등)이 필요합니다.' },
-        { status: 400 },
-      );
-    }
+    // 헤더 확인 (extractDataFromHeaderRow에서 이미 검증됨)
+    const headers = headerRow.map((header: string) => header.trim());
 
     // 각 필드의 인덱스 찾기
     const getColumnIndex = (fieldMappings: string[]) => {
@@ -490,9 +485,9 @@ export async function POST(request: NextRequest) {
     // 데이터 변환 및 지오코딩
     const locations: LocationData[] = [];
 
-    // 첫 번째 행(헤더)를 제외하고 처리
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
+    // dataRows 사용 (헤더 이전 행은 이미 제외됨)
+    for (let i = 0; i < dataRows.length; i++) {
+      const row = dataRows[i];
 
       if (row.length >= 2) {
         const name = getValue(row, columnIndices.name);
