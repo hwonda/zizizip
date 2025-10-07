@@ -95,7 +95,7 @@ export default function RootLayout({
       <body
         className={`${ geistSans.variable } ${ geistMono.variable } antialiased`}
       >
-        <h1 className="sr-only">{'지지집 - 엑셀로 쉽게 부동산 정보를 지도에 표시하세요'}</h1>
+        <h1 className="sr-only">{'지지집 - 엑셀로 된 부동산 정보를 지도에 표출하세요'}</h1>
         <QueryProvider>
           {children}
         </QueryProvider>

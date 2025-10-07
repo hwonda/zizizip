@@ -28,7 +28,7 @@ export default function NavigationWrapper({
           <Logo />
           <span className="flex flex-col font-bold text-stroke text-sub">
             {'지지집'}
-            <span className="text-sm text-gray-1 mt-[-4px]">{'엑셀로 쉽게 부동산 위치를 지도에 표시하세요'}</span>
+            <span className="text-sm text-gray-1 mt-[-4px]">{'엑셀로 된 부동산 정보를 지도에 표출하세요'}</span>
           </span>
         </div>
         {/* 사이드바 */}

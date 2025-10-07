@@ -99,7 +99,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         // 파일 입력 초기화
         setFile(null);
 
-        // 성공 메시지 (잠시 표시 후 자동 사라짐)
+        // 성공 메시지 (잠시 표출 후 자동 사라짐)
         if (validationResult.warnings.length > 0) {
           const warningMsg = `업로드 완료! 경고: ${ validationResult.warnings.join(', ') }`;
           setError(warningMsg);
@@ -394,7 +394,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
           {selectedCount === 0 && (
             <div className="mt-2 text-center text-xs text-secondary">
-              {'표시할 데이터셋을 선택해주세요'}
+              {'표출할 데이터셋을 선택해주세요'}
             </div>
           )}
         </div>

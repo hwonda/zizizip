@@ -23,7 +23,7 @@ export default function MapHeader({
             onChange={onToggleMarkers}
             className="form-checkbox h-5 w-5 text-blue-600"
           />
-          <span className="ml-2 text-gray-700">{'마커 표시'}</span>
+          <span className="ml-2 text-gray-700">{'마커 표출'}</span>
         </label>
         <label className="flex items-center cursor-pointer">
           <input

@@ -81,7 +81,7 @@ export default function MarkerManager({
         }),
         text: new Text({
           text: feature.get('name'),
-          offsetY: 10, // 마커 아래쪽에 표시
+          offsetY: 10, // 마커 아래쪽에 표출
           font: '12px Arial',
           fill: new Fill({ color: '#333' }),
           stroke: new Stroke({ color: '#fff', width: 3 }),
@@ -239,7 +239,7 @@ export default function MarkerManager({
     console.log('마커 업데이트 완료');
   }, [map, vectorSource, locations, createMarkerStyle, locationsChanged, showAllMarkers, groupLocationsByCoordinates]);
 
-  // 마커 표시/숨김 토글
+  // 마커 표출/숨김 토글
   useEffect(() => {
     if (!map) return;
 
