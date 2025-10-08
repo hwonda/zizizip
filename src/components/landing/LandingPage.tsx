@@ -26,7 +26,7 @@ const cards: Card[] = [
         <p>{'엑셀 파일 속 수백 개의 매물을'} <span className='font-bold'>{'한눈에 보고 싶다는 생각'}</span>{'에서 지지집이 시작되었습니다.'}</p>
       </div>
     ),
-    imageSrc: '/images/landing-3.webp',
+    imageSrc: '/images/landing-1.webp',
   },
   {
     id: 2,
@@ -38,17 +38,17 @@ const cards: Card[] = [
         <p>{'지지집은 공공기관에서 제공하는 엑셀을 그냥 업로드하면'} <span className='font-bold'>{'지도와 팝업으로 모든 정보를 한눈에'}</span>{' 볼 수 있습니다.'}</p>
       </div>
     ),
-    imageSrc: '/images/landing-3.webp',
+    imageSrc: '/images/landing-2.webp',
   },
   {
     id: 3,
     title: 'Q3. 어떻게 사용하나요?',
-    subtitle: '단 [ 2단계 ]로 끝나는 간단한 프로세스',
+    subtitle: '단 "2단계"로 끝나는 간단한 프로세스',
     description: (
       <div>
         <p>{'복잡한 설정이 필요 없습니다.'}</p>
         <p>{'공공기관 또는 네이버 카페에서 제공하는 부동산 정보 엑셀 파일을 '}<span className='font-bold'>{'다운로드'}</span>{' 받습니다.'}</p>
-        <p>{'그리고 지지집에 '}<span className='font-bold'>{'업로드'}</span>{'하면 끝!'}</p>
+        <p>{'그리고 지지집에 '}<span className='font-bold'>{'업로드'}</span>{'만 하면 끝!'}</p>
       </div>
     ),
     imageSrc: '/images/landing-3.webp',
@@ -154,15 +154,15 @@ export default function LandingPage() {
                   style={{ transform: `${ transformClass } translateZ(${ isActive ? '0' : isPrev || isNext ? '-100px' : '-200px' })` }}
                 >
                   <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]' />
-                  <div className='p-4 sm:p-8 h-full flex flex-col gap-3'>
+                  <div className='px-4 py-12 sm:p-8 h-full flex flex-col gap-3'>
                     <h2 className='text-xl font-bold text-main m-0'>
                       {card.title}
                     </h2>
                     <h3 className='text-lg font-bold text-primary m-0 leading-relaxed'>
                       {card.subtitle}
                     </h3>
-                    <div className='max-h-[387px] bg-gray-10 rounded-2xl my-1'>
-                      <Image src={card.imageSrc} alt={card.title} width="688" height="387" className='object-cover rounded-xl' />
+                    <div className='max-h-[387px] bg-gray-10 rounded-2xl my-1 border border-gray-9'>
+                      <Image src={card.imageSrc} alt={card.title} width="688" height="387" className='object-cover rounded-2xl' />
                     </div>
                     <div className='text-base leading-[1.8] text-sub'>
                       {card.description}
@@ -174,7 +174,7 @@ export default function LandingPage() {
           </div>
 
           <button
-            className='absolute top-1/2 -translate-y-1/2 left-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-20 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
+            className='absolute top-1/2 -translate-y-1/2 left-[-20px] lg:left-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
             onClick={handlePrev}
             aria-label='이전 카드'
           >
@@ -182,7 +182,7 @@ export default function LandingPage() {
           </button>
 
           <button
-            className='absolute top-1/2 -translate-y-1/2 right-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-20 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
+            className='absolute top-1/2 -translate-y-1/2 right-[-20px] lg:right-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
             onClick={handleNext}
             aria-label='다음 카드'
           >
