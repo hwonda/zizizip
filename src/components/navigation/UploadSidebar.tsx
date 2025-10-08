@@ -15,15 +15,34 @@ import {
   validateUploadLimit,
 } from '@/utils/fileValidation';
 
+// LoadingDots 컴포넌트
+function LoadingDots() {
+  const [dots, setDots] = useState('.');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => {
+        if (prev === '...') return '.';
+        return prev + '.';
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{dots}</span>;
+}
+
 interface UploadSidebarProps {
   onDataUploaded?: (data: ExtendedLocationData[])=> void;
 }
 
 export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<'validating' | 'parsing' | 'geocoding' | 'finalizing' | null>(null);
+  const [progress, setProgress] = useState(0);
 
   // 데이터셋 관리 훅 사용
   const {
@@ -54,11 +73,14 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   // 파일 업로드 함수
   const uploadFile = async (formData: FormData, fileName: string) => {
     console.log('파일 업로드 시작');
-    setIsUploading(true);
-    setError(null);
+    setLoadingStage('parsing');
+    setProgress(30);
 
     try {
       console.log('API 요청 전송 중...');
+      setLoadingStage('geocoding');
+      setProgress(50);
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
@@ -70,6 +92,8 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       }
 
       console.log('API 응답 수신 완료, 데이터 파싱 중...');
+      setProgress(80);
+
       const data: UploadResponse = await response.json();
       console.log(`API 응답 성공 여부: ${ data.success }, 데이터 항목 수: ${ data.data?.length || 0 }`);
 
@@ -82,12 +106,14 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       }
 
       if (data.success && data.data) {
+        setLoadingStage('finalizing');
+        setProgress(90);
+
         // 업로드 결과 validation
         const validationResult = validateUploadResult(data.data);
 
         if (!validationResult.isValid) {
           setError(validationResult.error);
-          setFile(null);
           return;
         }
 
@@ -96,8 +122,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         console.log(`새 데이터셋 추가: ${ datasetName }, 유효 데이터: ${ validationResult.validCount }/${ data.data.length }`);
         addDataset(data.data, datasetName);
 
-        // 파일 입력 초기화
-        setFile(null);
+        setProgress(100);
 
         // 성공 메시지 (잠시 표출 후 자동 사라짐)
         if (validationResult.warnings.length > 0) {
@@ -115,45 +140,67 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       console.error('업로드 중 예외 발생:', errorMessage);
       setError(`업로드 실패: ${ errorMessage }`);
     } finally {
-      setIsUploading(false);
+      setTimeout(() => {
+        setIsUploading(false);
+        setLoadingStage(null);
+        setProgress(0);
+      }, 500);
       console.log('파일 업로드 과정 완료');
     }
   };
 
   // 공통 파일 처리 함수
   const processFile = async (selectedFile: File) => {
-    // 각종 validation 체크
-    const validationChecks = [
-      () => validateUploadLimit(datasets.length),
-      () => validateFileSize(selectedFile),
-      () => validateFileFormat(selectedFile.name),
-      () => validateFileName(selectedFile.name),
-      () => validateDuplicateFile(selectedFile.name, datasets),
-    ];
-
-    // 동기 validation 체크
-    for (const check of validationChecks) {
-      const error = check();
-      if (error) {
-        setError(error);
-        return;
-      }
-    }
-
-    // 비동기 CSV 내용 검증
-    const csvError = await validateCSVContent(selectedFile);
-    if (csvError) {
-      setError(csvError);
-      return;
-    }
-
-    // 검증 통과 시 즉시 업로드
-    setFile(selectedFile);
+    // 로딩 상태 시작
+    setIsUploading(true);
+    setLoadingStage('validating');
+    setProgress(10);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    await uploadFile(formData, selectedFile.name);
+    try {
+      // 각종 validation 체크
+      const validationChecks = [
+        () => validateUploadLimit(datasets.length),
+        () => validateFileSize(selectedFile),
+        () => validateFileFormat(selectedFile.name),
+        () => validateFileName(selectedFile.name),
+        () => validateDuplicateFile(selectedFile.name, datasets),
+      ];
+
+      // 동기 validation 체크
+      for (const check of validationChecks) {
+        const error = check();
+        if (error) {
+          setError(error);
+          setIsUploading(false);
+          setLoadingStage(null);
+          setProgress(0);
+          return;
+        }
+      }
+
+      setProgress(20);
+
+      // 비동기 CSV 내용 검증
+      const csvError = await validateCSVContent(selectedFile);
+      if (csvError) {
+        setError(csvError);
+        setIsUploading(false);
+        setLoadingStage(null);
+        setProgress(0);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      await uploadFile(formData, selectedFile.name);
+    } catch (err) {
+      setError('파일 처리 중 오류가 발생했습니다.');
+      console.warn(err);
+      setIsUploading(false);
+      setLoadingStage(null);
+      setProgress(0);
+    }
   };
 
   // 파일 선택 핸들러 - 즉시 업로드
@@ -260,34 +307,65 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               className="hidden"
               disabled={datasets.length >= 3 || isUploading}
             />
-            <div className="flex flex-col items-center cursor-pointer">
-              <Upload className={`w-6 h-6 transition-colors ${
-                isUploading
-                  ? 'text-primary animate-pulse'
-                  : isDragOver
+            {!isUploading ? (
+              <div className="flex flex-col items-center cursor-pointer">
+                <Upload className={`w-6 h-6 transition-colors ${
+                  isDragOver
                     ? 'text-primary'
                     : 'text-gray-1 group-hover:text-primary'
-              }`}
-              />
-              <span className={`mt-2 text-sm transition-colors ${
-                isUploading
-                  ? 'text-primary'
-                  : isDragOver
+                }`}
+                />
+                <span className={`mt-2 text-sm transition-colors ${
+                  isDragOver
                     ? 'text-primary font-medium'
                     : 'text-gray-1 group-hover:text-primary'
-              }`}
-              >
-                {isUploading
-                  ? `${ file?.name ?? '' } 업로드 중...`
-                  : datasets.length >= 3
+                }`}
+                >
+                  {datasets.length >= 3
                     ? '파일 업로드 제한 (최대 3개)'
                     : 'CSV 또는 Excel 파일 선택'
-                }
-              </span>
-              <span className={`text-xs text-gray-5 group-hover:text-primary transition duration-200 ${ isUploading ? 'hidden' : '' }`}>
-                {'파일을 드래그하거나 클릭하여 선택하세요'}
-              </span>
-            </div>
+                  }
+                </span>
+                <span className="text-xs text-gray-5 group-hover:text-primary transition duration-200">
+                  {'파일을 드래그하거나 클릭하여 선택하세요'}
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                {/* Progress bar */}
+                <div className="w-full mb-3">
+                  <div className="relative w-full h-2 bg-[rgb(235,235,235)] rounded-full overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-300 ease-out"
+                      style={{
+                        width: `${ progress }%`,
+                        background: 'linear-gradient(90deg, rgb(254,104,29), rgb(255,160,36))',
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1 text-right text-xs text-[rgb(115,115,115)]">
+                    {progress}{'%'}
+                  </div>
+                </div>
+
+                {/* Loading message */}
+                <div className="text-center">
+                  <p className="text-sm font-medium text-[rgb(254,104,29)]">
+                    {loadingStage === 'validating' && '파일 검증 중'}
+                    {loadingStage === 'parsing' && '파일 파싱 중'}
+                    {loadingStage === 'geocoding' && '주소 변환 중'}
+                    {loadingStage === 'finalizing' && '마무리 중'}
+                    <LoadingDots />
+                  </p>
+                  <p className="mt-1 text-xs text-[rgb(115,115,115)]">
+                    {loadingStage === 'validating' && '파일 형식과 헤더를 확인하고 있어요'}
+                    {loadingStage === 'parsing' && '데이터를 읽어들이고 있어요'}
+                    {loadingStage === 'geocoding' && '주소를 좌표로 변환하고 있어요'}
+                    {loadingStage === 'finalizing' && '데이터셋을 준비하고 있어요'}
+                  </p>
+                </div>
+              </div>
+            )}
           </label>
         </div>
 
@@ -302,12 +380,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
           </div>
         )}
       </div>
-
-      {isUploading && (
-        <div className="mt-4 text-center text-xs text-sub">
-          {'파일을 업로드하고 지오코딩 처리 중입니다...'}
-        </div>
-      )}
 
       {/* 데이터셋 관리 섹션 */}
       {hasDatasets && (

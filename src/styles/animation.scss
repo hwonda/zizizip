@@ -90,6 +90,27 @@ $delays: (
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ellipsis {
+  0%, 100% {
+    content: '.';
+  }
+  33% {
+    content: '..';
+  }
+  66% {
+    content: '...';
+  }
+}
+
 // 애니메이션 미스인
 %base-animation {
   animation-fill-mode: forwards;
