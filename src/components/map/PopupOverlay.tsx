@@ -137,8 +137,10 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
   return (
     <div
       ref={popupRef}
-      className="absolute bg-background p-3 rounded-lg shadow-lg pointer-events-auto z-50 ol-popup"
+      className="absolute bg-background p-3 rounded-lg shadow-xl pointer-events-auto z-50 ol-popup border border-primary"
     >
+      {/* 삼각형 포인터 */}
+      <div className="absolute -top-2 left-3 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-primary" />
       {selectedLocationGroup && selectedUnit && (
         <div className="w-100 flex flex-col gap-1.5">
           {/* 헤더 */}
