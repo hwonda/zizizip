@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useRef, useCallback } from 'react';
 import { ExtendedLocationData, LocationGroup } from '@/types';
 import Map from 'ol/Map';
@@ -76,6 +77,10 @@ export default function MapPageClient() {
             />
           </MapContainer>
         </div>
+        <footer className="absolute bottom-5 right-5 flex flex-col items-end z-50">
+          <Image src="/images/v-world_ci.png" alt="v-world-ci" width={100} height={100} />
+          <p className="text-sm text-sub">{'© 2025 지지집. All rights reserved.'}</p>
+        </footer>
       </div>
     </>
   );
