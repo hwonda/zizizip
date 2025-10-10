@@ -95,9 +95,9 @@ export default function NoticePopup({ notices, onClose }: NoticePopupProps) {
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-10">
           <button
             onClick={() => handleClose(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-3 transition-all duration-300 hover:text-primary active:scale-[0.98]"
+            className="flex items-center gap-1.5 text-sm text-gray-3 transition-all duration-300 hover:text-primary active:scale-[0.98]"
           >
-            <CalendarCheck className='w-6 h-6' />
+            <CalendarCheck className='w-4 h-4' />
             <span>{'오늘은 그만 보기'}</span>
           </button>
           <button
