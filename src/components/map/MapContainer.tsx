@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ExtendedLocationData } from '@/types';
 import { useDatasetManager } from '@/hooks/useDatasetManager';
+import Loading from '@/components/common/Loading';
 
 interface MapContainerProps {
   children: React.ReactNode;
@@ -69,13 +70,13 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
     <div className="relative w-full h-full">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <div className="text-lg font-semibold">{'데이터 로딩 중...'}</div>
+          <Loading message="지도 로딩 중" size="lg" />
         </div>
       )}
 
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <div className="text-lg font-semibold text-red-600">
+          <div className="text-lg font-semibold text-error">
             {'데이터 로드 중 오류가 발생했습니다.'}
           </div>
         </div>
