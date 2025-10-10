@@ -43,6 +43,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'validating' | 'parsing' | 'geocoding' | 'finalizing' | null>(null);
   const [progress, setProgress] = useState(0);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // 데이터셋 관리 훅 사용
   const {
@@ -76,6 +77,10 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     setLoadingStage('parsing');
     setProgress(30);
 
+    // AbortController 생성
+    const controller = new AbortController();
+    setAbortController(controller);
+
     try {
       console.log('API 요청 전송 중...');
       setLoadingStage('geocoding');
@@ -84,6 +89,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -136,10 +142,17 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         setError(data.error || '업로드 중 오류가 발생했습니다.');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
-      console.error('업로드 중 예외 발생:', errorMessage);
-      setError(`업로드 실패: ${ errorMessage }`);
+      // AbortError는 사용자가 취소한 경우이므로 별도 처리
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('업로드가 사용자에 의해 취소되었습니다.');
+        setError('업로드가 취소되었습니다.');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
+        console.error('업로드 중 예외 발생:', errorMessage);
+        setError(`업로드 실패: ${ errorMessage }`);
+      }
     } finally {
+      setAbortController(null);
       setTimeout(() => {
         setIsUploading(false);
         setLoadingStage(null);
@@ -279,6 +292,14 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     toggleAllDatasets(shouldSelectAll);
   };
 
+  // 업로드 취소 핸들러
+  const handleCancelUpload = () => {
+    if (abortController) {
+      abortController.abort();
+      console.log('업로드 취소 요청');
+    }
+  };
+
   return (
     <div className="h-full bg-background/90 transition p-2 rounded-lg shadow-xl">
       <h2 className="sr-only">{'엑셀(CSV, Excel) 파일 업로드'}</h2>
@@ -334,12 +355,12 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
               <div className="flex flex-col items-center">
                 {/* Progress bar */}
                 <div className="w-full mb-3">
-                  <div className="relative w-full h-2 bg-[rgb(235,235,235)] rounded-full overflow-hidden">
+                  <div className="relative w-full h-2 bg-gray-8 rounded-full overflow-hidden">
                     <div
                       className="absolute inset-y-0 left-0 rounded-full transition-all duration-300 ease-out"
                       style={{
                         width: `${ progress }%`,
-                        background: 'linear-gradient(90deg, rgb(254,104,29), rgb(255,160,36))',
+                        background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
                       }}
                     />
                   </div>
@@ -350,19 +371,27 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
                 {/* Loading message */}
                 <div className="text-center">
-                  <p className="text-sm font-medium text-[rgb(254,104,29)]">
+                  <p className="text-sm font-medium text-primary">
                     {loadingStage === 'validating' && '파일 검증 중'}
                     {loadingStage === 'parsing' && '파일 파싱 중'}
                     {loadingStage === 'geocoding' && '주소 변환 중'}
                     {loadingStage === 'finalizing' && '마무리 중'}
                     <LoadingDots />
                   </p>
-                  <p className="mt-1 text-xs text-[rgb(115,115,115)]">
+                  <p className="mt-1 text-xs text-gray-3">
                     {loadingStage === 'validating' && '파일 형식과 헤더를 확인하고 있어요'}
                     {loadingStage === 'parsing' && '데이터를 읽어들이고 있어요'}
                     {loadingStage === 'geocoding' && '주소를 좌표로 변환하고 있어요'}
                     {loadingStage === 'finalizing' && '데이터셋을 준비하고 있어요'}
                   </p>
+
+                  {/* Cancel button */}
+                  <button
+                    onClick={handleCancelUpload}
+                    className="mt-3 px-4 py-1.5 text-xs font-medium text-error border border-error rounded hover:bg-error/10 transition"
+                  >
+                    {'취소'}
+                  </button>
                 </div>
               </div>
             )}
