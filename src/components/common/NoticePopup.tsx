@@ -18,8 +18,11 @@ interface NoticePopupProps {
 export default function NoticePopup({ notices, onClose }: NoticePopupProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0);
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
+    if (hasChecked) return;
+
     // 표시할 공지사항이 있는지 확인
     const visibleNotices = notices.filter((notice) => shouldShowNotice(notice.id));
 
@@ -31,7 +34,9 @@ export default function NoticePopup({ notices, onClose }: NoticePopupProps) {
       );
       setCurrentNoticeIndex(firstVisibleIndex);
     }
-  }, [notices]);
+
+    setHasChecked(true);
+  }, [notices, hasChecked]);
 
   const handleClose = (shouldHideToday = false) => {
     const currentNotice = notices[currentNoticeIndex];
