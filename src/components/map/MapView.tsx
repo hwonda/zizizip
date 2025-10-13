@@ -56,6 +56,7 @@ export default function MapView({ onMapInitialized }: MapViewProps) {
       view: new View({
         center: fromLonLat([127.0, 37.5]), // 서울 중심
         zoom: 13,
+        minZoom: 7,
       }),
     });
 
