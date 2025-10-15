@@ -1,6 +1,6 @@
 # 지지집 (zizizip)
 
-> CSV/Excel 파일을 업로드하여 LH, SH 공고의 부동산을 지도에서 한눈에 확인하는 Next.js 기반 위치 지도 서비스
+CSV/Excel 파일을 업로드하여 LH, SH 공고의 부동산을 지도에서 한눈에 확인하는 Next.js 기반 위치 지도 서비스
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
