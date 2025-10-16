@@ -73,10 +73,10 @@ export default function NoticePopup({ notices, onClose }: NoticePopupProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-foreground/70 animate-intro"
+      className="fixed h-screen w-screen inset-0 z-[9999] flex items-center justify-center bg-foreground/70 animate-intro"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-[60vw] sm:w-[480px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden font-pretendard">
+      <div className="relative w-[90vw] sm:w-[480px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden font-pretendard">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-10">
           <h2 className="text-lg font-bold text-main">
