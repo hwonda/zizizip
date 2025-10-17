@@ -107,7 +107,7 @@ export default function LandingPage() {
 
   return (
     <div className='min-h-screen flex flex-col bg-gradient-to-br from-[#fafafa] to-[#f5f5f5] overflow-hidden'>
-      <header className='fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] p-8 z-10 backdrop-blur-md'>
+      <header className='absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] p-8 z-10 backdrop-blur-md'>
         <div className="flex items-center gap-2 z-10">
           <Logo />
           <span className="flex flex-col font-bold text-stroke text-sub">
@@ -119,7 +119,7 @@ export default function LandingPage() {
 
       <main className='flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-8 max-w-[800px] mx-auto w-full'>
         <div className='relative w-full mb-12'>
-          <div className='relative w-full h-[620px]'>
+          <div className='relative w-full min-h-[520px] sm:h-[620px]'>
             {cards.map((card, index) => {
               const isActive = index === currentIndex;
               const isPrev = index === (currentIndex - 1 + cards.length) % cards.length;
