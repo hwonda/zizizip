@@ -155,7 +155,7 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
     // VWorld 지오코딩 API 호출 - https 사용
     // 도로명 주소와 지번 주소 모두 처리하기 위해 먼저 지번 주소로 시도
     const addressType = isJibunAddress ? 'PARCEL' : 'ROAD';
-    const url = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ addressType }&key=${ apiKey }`;
+    const url = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=xml&type=${ addressType }&key=${ apiKey }`;
 
     console.log(`API 요청 URL: ${ url } (주소 타입: ${ addressType })`);
 
@@ -173,7 +173,7 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
 
       // 주소 타입 변경 (PARCEL -> ROAD 또는 ROAD -> PARCEL)
       const alternativeType = addressType === 'PARCEL' ? 'ROAD' : 'PARCEL';
-      const alternativeUrl = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ alternativeType }&key=${ apiKey }`;
+      const alternativeUrl = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=xml&type=${ alternativeType }&key=${ apiKey }`;
 
       console.log(`대체 API 요청 URL: ${ alternativeUrl } (주소 타입: ${ alternativeType })`);
 
