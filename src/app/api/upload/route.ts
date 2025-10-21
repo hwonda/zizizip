@@ -68,6 +68,16 @@ function refineAddress(address: string): string {
   // 불필요한 공백 제거
   let refined = address.trim().replace(/\s+/g, ' ');
 
+  // 괄호가 나오는 지점부터 끝까지 모든 내용 제거
+  // 예: "남동대로898번길 18(간석동,늘푸름)189-2, 189-3" -> "남동대로898번길 18"
+  const openParenIndex = refined.indexOf('(');
+  if (openParenIndex !== -1) {
+    refined = refined.substring(0, openParenIndex);
+  }
+
+  // 괄호 제거 후 남은 불필요한 공백 정리
+  refined = refined.trim().replace(/\s+/g, ' ');
+
   // 번지/번길 표기 정규화
   refined = refined.replace(/(\d+)번지/g, '$1');
   refined = refined.replace(/(\d+)번길/g, '$1번길');
@@ -93,8 +103,12 @@ function refineAddress(address: string): string {
   refined = refined.replace(/\b울산\b(?!\s*광역시)/g, '울산광역시');
   refined = refined.replace(/세종시/g, '세종특별자치시');
   refined = refined.replace(/\b세종\b(?!\s*특별자치시)/g, '세종특별자치시');
+
   // 특수문자 처리 (하이픈은 유지)
   refined = refined.replace(/[^\w\s가-힣\d-]/g, '');
+
+  // 최종 공백 정리
+  refined = refined.trim().replace(/\s+/g, ' ');
 
   return refined;
 }
@@ -103,16 +117,16 @@ function refineAddress(address: string): string {
  * 지오코딩 API 호출 함수 (VWorld + 대체 API)
  */
 async function geocodeAddress(address: string): Promise<{ lat: number; lon: number } | null> {
-  console.log(`지오코딩 시작: ${ address }`);
-
-  // 캐시 확인
+  // 캐시 확인 (가장 먼저 체크)
   const cacheKey = `geocode_${ address }`;
   const cachedResult = geocodeCache.get<{ lat: number; lon: number }>(cacheKey);
 
   if (cachedResult) {
-    console.log(`캐시에서 좌표 찾음: ${ JSON.stringify(cachedResult) }`);
+    console.log(`[캐시 히트] ${ address } => (${ cachedResult.lat }, ${ cachedResult.lon })`);
     return cachedResult;
   }
+
+  console.log(`[API 호출] 지오코딩 시작: ${ address }`);
 
   // 레이트 리밋 체크
   if (!checkRateLimit()) {
@@ -484,6 +498,19 @@ export async function POST(request: NextRequest) {
 
     // 데이터 변환 및 지오코딩
     const locations: LocationData[] = [];
+    const geocodingStats = {
+      total: 0,
+      apiCalls: 0,
+      cacheHits: 0,
+      success: 0,
+      failed: 0,
+    };
+    const failedAddresses: Array<{
+      index: number;
+      name: string;
+      address: string;
+      reason: string;
+    }> = [];
 
     // dataRows 사용 (헤더 이전 행은 이미 제외됨)
     for (let i = 0; i < dataRows.length; i++) {
@@ -571,13 +598,41 @@ export async function POST(request: NextRequest) {
 
           // 주소 지오코딩
           try {
+            geocodingStats.total++;
+
+            // 캐시 확인 (통계용)
+            const cacheKey = `geocode_${ address }`;
+            const isCached = geocodeCache.get<{ lat: number; lon: number }>(cacheKey) !== null;
+
             const coords = await geocodeAddress(address);
+
             if (coords) {
               location.lat = coords.lat;
               location.lon = coords.lon;
+              geocodingStats.success++;
+
+              // 캐시 히트 vs API 호출 구분
+              if (isCached) {
+                geocodingStats.cacheHits++;
+              } else {
+                geocodingStats.apiCalls++;
+              }
+
+              console.log(`✓ 지오코딩 성공 [${ i + 1 }/${ dataRows.length }] ${ isCached ? '(캐시)' : '(API)' }: ${ address }`);
             } else {
+              geocodingStats.failed++;
+              geocodingStats.apiCalls++; // 실패해도 API는 호출됨
+
+              // 실패한 주소 기록
+              failedAddresses.push({
+                index: i + 1,
+                name: name || '',
+                address: address,
+                reason: 'API 응답 실패 또는 좌표 없음',
+              });
+
               // API 키가 설정되지 않았거나 지오코딩 실패 시 테스트용 고정 좌표 사용
-              console.log(`지오코딩 실패, 테스트용 고정 좌표 사용: ${ address }`);
+              console.warn(`✗ 지오코딩 실패 [${ i + 1 }/${ dataRows.length }]: ${ address }`);
 
               // 샘플 데이터의 주소에 따라 고정 좌표 할당
               if (address.includes('강남')) {
@@ -596,15 +651,28 @@ export async function POST(request: NextRequest) {
                 location.lat = 33.2496;
                 location.lon = 126.4074;
               } else {
-                // 기본 좌표 (서울시청)
-                // location.lat = 37.5666;
-                // location.lon = 126.9784;
+                // 좌표 없이 저장
+                console.warn(`좌표 없이 저장: ${ address }`);
               }
             }
           } catch (error) {
-            console.error(`Error geocoding address ${ address }:`, error);
-            // location.lat = 37.5666;
-            // location.lon = 126.9784;
+            geocodingStats.failed++;
+            geocodingStats.apiCalls++; // 예외 발생해도 API 호출 시도는 했음
+
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            // 실패한 주소 기록
+            failedAddresses.push({
+              index: i + 1,
+              name: name || '',
+              address: address,
+              reason: `예외 발생: ${ errorMessage }`,
+            });
+
+            console.error(`지오코딩 예외 [${ i + 1 }/${ dataRows.length }]:`, {
+              주소: address,
+              에러: errorMessage,
+            });
           }
 
           locations.push(location);
@@ -612,7 +680,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, data: locations });
+    // 지오코딩 통계 출력
+    console.log('========================================');
+    console.log('지오코딩 통계');
+    console.log('========================================');
+    console.log(`전체 처리:    ${ geocodingStats.total }건`);
+    console.log(`성공:         ${ geocodingStats.success }건 (${ geocodingStats.total > 0 ? Math.round(geocodingStats.success / geocodingStats.total * 100) : 0 }%)`);
+    console.log(`실패:         ${ geocodingStats.failed }건 (${ geocodingStats.total > 0 ? Math.round(geocodingStats.failed / geocodingStats.total * 100) : 0 }%)`);
+    console.log(`API 호출:     ${ geocodingStats.apiCalls }건`);
+    console.log(`캐시 히트:    ${ geocodingStats.cacheHits }건 (중복 주소)`);
+    console.log(`절약된 호출:  ${ geocodingStats.cacheHits }건`);
+    console.log('========================================');
+
+    // 실패한 주소 리스트 출력
+    if (failedAddresses.length > 0) {
+      console.log('');
+      console.log('========================================');
+      console.log(`실패한 주소 목록 (${ failedAddresses.length }건)`);
+      console.log('========================================');
+      failedAddresses.forEach((item, idx) => {
+        console.log(`${ idx + 1 }. [행 ${ item.index }] ${ item.name }`);
+        console.log(`   주소: ${ item.address }`);
+        console.log(`   사유: ${ item.reason }`);
+        console.log('');
+      });
+      console.log('========================================');
+    } else {
+      console.log('');
+      console.log('✓ 모든 주소 지오코딩 성공!');
+      console.log('');
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: locations,
+      stats: geocodingStats,
+    });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
