@@ -12,7 +12,7 @@ import MapView from '@/components/map/MapView';
 import MarkerManager from '@/components/map/MarkerManager';
 import PopupOverlay from '@/components/map/PopupOverlay';
 import DebugPanel from '@/components/map/DebugPanel';
-import NoticePopup from '@/components/common/NoticePopup';
+// import NoticePopup from '@/components/common/NoticePopup';
 
 export default function MapPageClient() {
   // 지도 상태
@@ -40,26 +40,26 @@ export default function MapPageClient() {
   }, []);
 
   // 공지사항 내용 정의
-  const notices = [
-    {
-      id: 'notice-2025-10-10',
-      title: '공지사항',
-      content: (
-        <div className="space-y-2">
-          <p className="text-lg text-main">
-            {'현재 좌표 변환 기능이 제한되어 있습니다.'}
-          </p>
-          <p className="text-gray-3">
-            {'지지집(zizizip)은 개발 중입니다. 국토교통부의 운영 승인 전까지 서비스 기능이 제한됩니다.'}
-          </p>
-        </div>
-      ),
-    },
-  ];
+  // const notices = [
+  //   {
+  //     id: 'notice-2025-10-10',
+  //     title: '공지사항',
+  //     content: (
+  //       <div className="space-y-2">
+  //         <p className="text-lg text-main">
+  //           {'현재 좌표 변환 기능이 제한되어 있습니다.'}
+  //         </p>
+  //         <p className="text-gray-3">
+  //           {'지지집(zizizip)은 개발 중입니다. 국토교통부의 운영 승인 전까지 서비스 기능이 제한됩니다.'}
+  //         </p>
+  //       </div>
+  //     ),
+  //   },
+  // ];
 
   return (
     <>
-      <NoticePopup notices={notices} />
+      {/* <NoticePopup notices={notices} /> */}
 
       <NavigationWrapper
         showAllMarkers={showAllMarkers}
