@@ -10,7 +10,7 @@ import NavigationWrapper from '@/components/navigation/NavigationWrapper';
 import MapContainer from '@/components/map/MapContainer';
 import MapView from '@/components/map/MapView';
 import MarkerManager from '@/components/map/MarkerManager';
-import PopupOverlay from '@/components/map/PopupOverlay';
+import PopupOverlay from '@/components/map/popup/PopupOverlay';
 import DebugPanel from '@/components/map/DebugPanel';
 // import NoticePopup from '@/components/common/NoticePopup';
 
