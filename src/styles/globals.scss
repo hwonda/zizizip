@@ -39,7 +39,11 @@ button {
   --gray-7: rgb(195, 195, 195);
   --gray-8: rgb(215, 215, 215);
   --gray-9: rgb(235, 235, 235);
-  --gray-10: rgb(240, 240, 240);
+  --gray-10: rgb(242, 242, 242);
+
+  --house-apartment: rgb(125, 95, 174);
+  --house-officetel: rgb(68, 94, 168);
+  --house-etc: rgb(71, 161, 104);
 
   --font-suit: 'Suit', sans-serif;
   --font-pretendard: 'Pretendard Variable', sans-serif;
@@ -71,7 +75,11 @@ button {
   --gray-7: rgb(60, 60, 60);
   --gray-8: rgb(45, 45, 45);
   --gray-9: rgb(27, 27, 27);
-  --gray-10: rgb(240, 240, 240);
+  --gray-10: rgb(15, 15, 15);
+
+  --house-apartment: rgb(108, 62, 181);
+  --house-officetel: rgb(68, 94, 168);
+  --house-etc: rgb(71, 161, 104);
 }
 
 @theme inline {
@@ -106,6 +114,10 @@ button {
   --color-gray-8: var(--gray-8);
   --color-gray-9: var(--gray-9);
   --color-gray-10: var(--gray-10);
+
+  --color-house-apartment: var(--house-apartment);
+  --color-house-officetel: var(--house-officetel);
+  --color-house-etc: var(--house-etc);
 
   --font-suit: var(--font-suit);
   --font-pretendard: var(--font-pretendard);

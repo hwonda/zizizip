@@ -6,6 +6,7 @@ import Map from 'ol/Map';
 import { Clipboard, ClipboardCheck, X } from 'lucide-react';
 import { usePopupOverlay } from '@/hooks/usePopupOverlay';
 import { formatArea } from '@/utils/formatters';
+import HouseBadge from './HouseBadge';
 import Badge from './Badge';
 import PriceSection from './PriceSection';
 
@@ -62,7 +63,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
               </button>
             </div>
             <div className="flex flex-wrap gap-0.5">
-              {selectedUnit.houseType && <Badge text={selectedUnit.houseType} />}
+              {selectedUnit.houseType && <HouseBadge houseType={selectedUnit.houseType} />}
               {selectedUnit.elevator !== undefined && <Badge title="승강기" text={selectedUnit.elevator ? 'O' : 'X'} />}
             </div>
             <span className="flex items-start gap-0.5">
