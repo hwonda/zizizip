@@ -150,7 +150,11 @@ export default function LandingPage() {
               return (
                 <div
                   key={card.id}
-                  className={`absolute w-full h-full bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-[600ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${ transformClass } ${ opacityClass } ${ zIndexClass } ${ !isActive ? 'pointer-events-none' : '' }`}
+                  className={`
+                    absolute w-full h-full bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] 
+                    transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden 
+                    ${ transformClass } ${ opacityClass } ${ zIndexClass } ${ !isActive ? 'pointer-events-none' : '' }
+                  `}
                   style={{ transform: `${ transformClass } translateZ(${ isActive ? '0' : isPrev || isNext ? '-100px' : '-200px' })` }}
                 >
                   <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]' />
@@ -161,8 +165,8 @@ export default function LandingPage() {
                     <h3 className='text-lg font-bold text-primary m-0 leading-relaxed'>
                       {card.subtitle}
                     </h3>
-                    <div className='max-h-[387px] bg-gray-10 rounded-2xl my-1 border border-gray-9'>
-                      <Image src={card.imageSrc} alt={card.title} width="688" height="387" className='object-cover rounded-2xl' />
+                    <div className='bg-gray-10 rounded-2xl my-1 border border-gray-9'>
+                      <Image src={card.imageSrc} alt={card.title} width="688" height="386" className='rounded-2xl h-full' />
                     </div>
                     <div className='text-base leading-[1.8] text-sub'>
                       {card.description}
@@ -174,7 +178,9 @@ export default function LandingPage() {
           </div>
 
           <button
-            className='absolute top-1/2 -translate-y-1/2 left-[-20px] lg:left-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
+            className='absolute top-1/2 -translate-y-1/2 left-[-20px] lg:left-[-60px] w-12 h-12 rounded-full bg-white
+              flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5
+              hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
             onClick={handlePrev}
             aria-label='이전 카드'
           >
@@ -182,7 +188,9 @@ export default function LandingPage() {
           </button>
 
           <button
-            className='absolute top-1/2 -translate-y-1/2 right-[-20px] lg:right-[-60px] w-12 h-12 rounded-full bg-white flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5 hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
+            className='absolute top-1/2 -translate-y-1/2 right-[-20px] lg:right-[-60px] w-12 h-12 rounded-full bg-white
+              flex items-center justify-center cursor-pointer transition-all duration-300 z-40 text-gray-5
+              hover:bg-gradient-to-r hover:from-[#ff9447] hover:to-[#ed6e13] hover:border-transparent hover:text-white hover:scale-110 active:scale-95'
             onClick={handleNext}
             aria-label='다음 카드'
           >
@@ -211,7 +219,10 @@ export default function LandingPage() {
             {cards.map((_, index) => (
               <button
                 key={`${ index }-${ index === currentIndex ? currentIndex : '' }`}
-                className={`h-3 rounded-full border-none cursor-pointer transition-all duration-300 hover:bg-gray-5 hover:scale-110 ${ index === currentIndex ? `w-8 bg-gray-8 rounded-md progress-bar ${ !isPlaying ? 'paused' : '' }` : 'w-3 bg-gray-8' }`}
+                className={`
+                  h-3 rounded-full border-none cursor-pointer transition-all duration-300 hover:bg-gray-5 hover:scale-110 
+                  ${ index === currentIndex ? `w-8 bg-gray-8 rounded-md progress-bar ${ !isPlaying ? 'paused' : '' }` : 'w-3 bg-gray-8' }
+                `}
                 onClick={() => handleDotClick(index)}
                 aria-label={`${ index + 1 }번째 카드로 이동`}
               />
@@ -220,7 +231,9 @@ export default function LandingPage() {
         </div>
 
         <button
-          className='group w-full pl-2 py-5 text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00] border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)] mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
+          className='group w-full pl-2 py-5 text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
+            border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)]
+            mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
           onClick={handleStartClick}
         >
           <span>{'지금 시작하기'}</span>
