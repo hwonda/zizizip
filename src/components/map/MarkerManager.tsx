@@ -17,6 +17,7 @@ interface MarkerManagerProps {
   vectorSource: VectorSource | null;
   locations: ExtendedLocationData[];
   showAllMarkers: boolean;
+  showMarkerLabels?: boolean;
   onMarkerClick?: (group: LocationGroup)=> void;
 }
 
@@ -25,6 +26,7 @@ export default function MarkerManager({
   vectorSource,
   locations,
   showAllMarkers,
+  showMarkerLabels = true,
   onMarkerClick,
 }: MarkerManagerProps) {
   // 이전 locations 데이터를 저장하여 불필요한 업데이트 방지
@@ -64,7 +66,7 @@ export default function MarkerManager({
   }, []);
 
   // 마커 스타일 생성 함수 (그룹 정보 포함)
-  const createMarkerStyle = useCallback((feature: FeatureLike) => {
+  const createMarkerStyle = useCallback((feature: FeatureLike, showLabels: boolean) => {
     const datasetColor = feature.get('datasetColor') as string || '#3498db';
     const unitCount = feature.get('unitCount') as number || 1;
 
@@ -79,14 +81,14 @@ export default function MarkerManager({
           scale: 1,
           anchor: [0.5, 1], // 물방울 끝점이 정확한 위치를 가리키도록
         }),
-        text: new Text({
+        text: showLabels ? new Text({
           text: feature.get('name'),
           offsetY: 10, // 마커 아래쪽에 표출
           font: '12px Arial',
           fill: new Fill({ color: '#333' }),
           stroke: new Stroke({ color: '#fff', width: 3 }),
           textAlign: 'center',
-        }),
+        }) : undefined,
       }),
     ];
 
@@ -215,7 +217,7 @@ export default function MarkerManager({
         });
 
         // 스타일 설정
-        feature.setStyle(createMarkerStyle(feature));
+        feature.setStyle(createMarkerStyle(feature, showMarkerLabels));
         vectorSource.addFeature(feature);
       } catch (err) {
         console.error(`마커 그룹 ${ index + 1 } 생성 중 오류:`, err);
@@ -250,6 +252,19 @@ export default function MarkerManager({
       vectorLayer.setVisible(showAllMarkers);
     }
   }, [map, showAllMarkers]);
+
+  // 마커 라벨 표시/숨김 토글
+  useEffect(() => {
+    if (!vectorSource) return;
+
+    console.log(`🏷️  마커 라벨 ${ showMarkerLabels ? '표시' : '숨김' }`);
+
+    // 모든 마커의 스타일 업데이트
+    const features = vectorSource.getFeatures();
+    features.forEach((feature) => {
+      feature.setStyle(createMarkerStyle(feature, showMarkerLabels));
+    });
+  }, [vectorSource, showMarkerLabels, createMarkerStyle]);
 
   // 클릭 이벤트 처리
   useEffect(() => {
