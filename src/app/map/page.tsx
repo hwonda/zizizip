@@ -4,7 +4,7 @@ import MapPageClient from '@/components/map/MapPageClient';
 
 export function generateMetadata(): Metadata {
   return {
-    title: '지지집 - 간편한 부동산 위치 지도',
+    title: mapPageMetadata.title,
     description: mapPageMetadata.description,
     alternates: {
       canonical: mapPageMetadata.url,

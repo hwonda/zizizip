@@ -6,6 +6,7 @@ import { ExtendedLocationData, LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 
+import { mapPageMetadata } from '@/constants/metadata';
 import NavigationWrapper from '@/components/navigation/NavigationWrapper';
 import MapContainer from '@/components/map/MapContainer';
 import MapView from '@/components/map/MapView';
@@ -60,6 +61,7 @@ export default function MapPageClient() {
   return (
     <>
       {/* <NoticePopup notices={notices} /> */}
+      <title className='sr-only'>{mapPageMetadata.title}</title>
 
       <NavigationWrapper
         showAllMarkers={showAllMarkers}
