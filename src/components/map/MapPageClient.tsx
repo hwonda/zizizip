@@ -13,6 +13,7 @@ import MapView from '@/components/map/MapView';
 import MarkerManager from '@/components/map/MarkerManager';
 import PopupOverlay from '@/components/map/popup/PopupOverlay';
 import DebugPanel from '@/components/map/DebugPanel';
+import MapControlButtons from '@/components/map/MapControlButtons';
 // import NoticePopup from '@/components/common/NoticePopup';
 
 export default function MapPageClient() {
@@ -23,6 +24,7 @@ export default function MapPageClient() {
   // UI 상태
   const [showAllMarkers, setShowAllMarkers] = useState(true);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [showMarkerLabels, setShowMarkerLabels] = useState(true);
 
   // 데이터 상태
   const [locations, setLocations] = useState<ExtendedLocationData[]>([]);
@@ -84,6 +86,7 @@ export default function MapPageClient() {
               vectorSource={vectorSourceRef.current}
               locations={locations}
               showAllMarkers={showAllMarkers}
+              showMarkerLabels={showMarkerLabels}
               onMarkerClick={setSelectedLocationGroup}
             />
 
@@ -99,6 +102,12 @@ export default function MapPageClient() {
               locations={locations}
             />
           </MapContainer>
+
+          {/* 지도 컨트롤 버튼 */}
+          <MapControlButtons
+            showMarkerLabels={showMarkerLabels}
+            onToggleMarkerLabels={() => setShowMarkerLabels(!showMarkerLabels)}
+          />
         </div>
         <footer className="absolute bottom-5 right-5 flex flex-col items-end z-50">
           <Image src="/images/v-world_ci.png" alt="v-world-ci" width={100} height={100} />

@@ -19,6 +19,11 @@ export default function MapView({ onMapInitialized }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
+  const koreaExtent = [
+    ...fromLonLat([121, 31.5]), // 남서쪽 모서리 [minX, minY]
+    ...fromLonLat([133, 39.5]), // 북동쪽 모서리 [maxX, maxY]
+  ];
+
   // 지도 초기화 (한 번만 실행)
   useEffect(() => {
     console.log('지도 초기화 useEffect 실행');
@@ -57,6 +62,8 @@ export default function MapView({ onMapInitialized }: MapViewProps) {
         center: fromLonLat([127.0, 37.5]), // 서울 중심
         zoom: 13,
         minZoom: 7,
+        maxZoom: 19,
+        extent: koreaExtent, // 한반도 및 주변 지역으로 제한
       }),
     });
 
