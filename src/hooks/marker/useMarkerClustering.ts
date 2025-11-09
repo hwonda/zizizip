@@ -113,25 +113,65 @@ export function useMarkerClustering({
 
   // vectorSource의 feature 변경 감지 (데이터셋 on/off 시)
   useEffect(() => {
-    if (!map || !vectorSource) return;
+    if (!map || !vectorSource) {
+      return;
+    }
 
     // feature 변경 완료 후 실행할 타이머
     let updateTimer: NodeJS.Timeout;
 
-    const handleFeaturesChange = () => {
-      // 현재 줌 레벨이 클러스터 범위인지 확인
-      const currentZoomLevel = map.getView().getZoom();
-      if (currentZoomLevel === undefined || currentZoomLevel > 11) {
-        // 일반 마커 모드에서는 처리하지 않음
-        return;
-      }
-
-      // 짧은 debounce로 clear + addfeature가 연속으로 발생할 때 한 번만 실행
+    const handleFeaturesChange = (event: any) => {
+      // debounce로 clear + addfeature가 연속으로 발생할 때 한 번만 실행
       clearTimeout(updateTimer);
       updateTimer = setTimeout(() => {
-        console.log('🔄 vectorSource 변경 감지 - 클러스터 레이어 재생성');
-        rebuildClusterLayers();
-      }, 50);
+        const currentZoomLevel = map.getView().getZoom();
+        if (currentZoomLevel === undefined) {
+          return;
+        }
+
+        const layers = map.getLayers().getArray();
+        const markerLayers = layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
+
+        if (currentZoomLevel > 11) {
+          // 일반 마커 모드
+          console.log('🔄 vectorSource 변경 감지 - 일반 마커 레이어 확인');
+
+          // 기존 레이어 확인
+          if (markerLayers.length > 0) {
+            const firstLayer = markerLayers[0];
+            const currentSource = firstLayer.getSource();
+            const isClusterMode = currentSource instanceof Cluster;
+
+            console.log(`🔍 기존 레이어 모드: ${ isClusterMode ? '클러스터' : '일반' }`);
+
+            if (isClusterMode) {
+              // 클러스터 레이어가 있으면 제거하고 일반 레이어로 전환
+              console.log('🔄 클러스터 레이어 제거 후 일반 레이어로 전환');
+              markerLayers.forEach((layer) => map.removeLayer(layer));
+              datasetLayersRef.current.clear();
+
+              const normalLayer = new VectorLayer({
+                source: vectorSource,
+              });
+              map.addLayer(normalLayer);
+              console.log('✅ 일반 마커 레이어 활성화');
+            } else {
+              console.log('✅ 이미 일반 레이어 - 업데이트 스킵');
+            }
+            // 이미 일반 레이어면 아무것도 안 함 (vectorSource가 자동으로 업데이트됨)
+          } else {
+            // 레이어가 없으면 새로 생성
+            const normalLayer = new VectorLayer({
+              source: vectorSource,
+            });
+            map.addLayer(normalLayer);
+          }
+        } else {
+          // 클러스터 모드
+          console.log('🔄 vectorSource 변경 감지 - 클러스터 레이어 재생성');
+          rebuildClusterLayers();
+        }
+      }, 100);
     };
 
     // vectorSource의 변경 이벤트 리스너 등록
@@ -158,7 +198,22 @@ export function useMarkerClustering({
     const markerLayers = layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
 
     if (markerLayers.length === 0) {
-      console.warn('⚠️  마커 레이어를 찾을 수 없음');
+      // 레이어가 없는 경우: vectorSource에 feature가 있으면 레이어 생성
+      const features = vectorSource.getFeatures();
+      if (features.length > 0) {
+        console.log('⚠️  레이어가 없지만 feature 존재 - 레이어 생성');
+        if (currentZoom <= 11) {
+          // 클러스터 모드
+          rebuildClusterLayers();
+        } else {
+          // 일반 마커 모드
+          const normalLayer = new VectorLayer({
+            source: vectorSource,
+          });
+          map.addLayer(normalLayer);
+        }
+      } else {
+      }
       return;
     }
 
