@@ -12,7 +12,7 @@ function getKSTMidnight(): number {
   const localOffset = now.getTimezoneOffset(); // 분 단위 (UTC와의 차이)
 
   // 현재 시간을 KST로 변환
-  const kstTime = new Date(now.getTime() + (kstOffset + localOffset) * 60 * 1000);
+  const kstTime = new Date(now.getTime() + ((kstOffset + localOffset) * 60 * 1000));
 
   // KST 기준 다음 날 자정
   kstTime.setHours(24, 0, 0, 0);

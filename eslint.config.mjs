@@ -73,7 +73,7 @@ const eslintConfig = [
         "logical": "parens-new-line",
         "prop": "parens-new-line"
       }],
-      "@stylistic/jsx-props-no-multi-spaces": "warn",
+      "@stylistic/no-multi-spaces": "warn",
       "@stylistic/template-curly-spacing": ["warn", "always"],
       "@stylistic/jsx-equals-spacing": ["warn", "never"],
       "@stylistic/no-mixed-operators": "warn",

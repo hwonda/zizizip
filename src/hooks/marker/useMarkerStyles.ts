@@ -32,7 +32,7 @@ export function useMarkerStyles() {
     // 클러스터 크기에 따른 원 크기 계산 (최소 20, 최대 50)
     const baseRadius = 20;
     const maxRadius = 50;
-    const radius = Math.min(baseRadius + clusterSize * 2, maxRadius);
+    const radius = Math.min(baseRadius + (clusterSize * 2), maxRadius);
 
     return new Style({
       image: new Circle({
