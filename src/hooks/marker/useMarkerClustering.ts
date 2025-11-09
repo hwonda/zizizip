@@ -13,6 +13,9 @@ interface UseMarkerClusteringParams {
   showMarkerLabels: boolean;
 }
 
+// 줌 레벨 임계값 상수
+const CLUSTER_ZOOM_THRESHOLD = 11;
+
 /**
  * 마커 클러스터링 관련 훅
  * 줌 레벨에 따라 클러스터 모드와 일반 마커 모드를 전환합니다.
@@ -27,6 +30,7 @@ export function useMarkerClustering({
 }: UseMarkerClusteringParams) {
   const [currentZoom, setCurrentZoom] = useState(13);
   const datasetLayersRef = useRef<Map<string, { source: VectorSource; cluster: Cluster; layer: VectorLayer<Cluster> }>>(new Map());
+  const syncTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 줌 레벨 변경 감지
   useEffect(() => {
@@ -51,27 +55,34 @@ export function useMarkerClustering({
     };
   }, [map]);
 
-  // 클러스터 레이어를 재생성하는 함수
-  const rebuildClusterLayers = useCallback(() => {
-    if (!map || !vectorSource) return;
-
+  // 유틸리티: 마커 레이어 가져오기
+  const getMarkerLayers = useCallback(() => {
+    if (!map) return [];
     const layers = map.getLayers().getArray();
-    const markerLayers = layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
+    return layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
+  }, [map]);
 
-    // 기존 클러스터 레이어들 제거
+  // 유틸리티: 모든 마커 레이어 제거
+  const removeAllMarkerLayers = useCallback(() => {
+    if (!map) return;
+    const markerLayers = getMarkerLayers();
     markerLayers.forEach((layer) => map.removeLayer(layer));
     datasetLayersRef.current.clear();
+    console.log('🗑️  모든 마커 레이어 제거');
+  }, [map, getMarkerLayers]);
 
-    // 데이터셋별로 feature 그룹화
+  // 클러스터 레이어 생성
+  const createClusterLayers = useCallback(() => {
+    if (!map || !vectorSource) return;
+
     const features = vectorSource.getFeatures();
-
     if (features.length === 0) {
       console.log('🗑️  표출할 feature가 없어 클러스터 레이어를 생성하지 않음');
       return;
     }
 
+    // 데이터셋별로 feature 그룹화
     const datasetGroups = new Map<string, Feature[]>();
-
     features.forEach((feature) => {
       const datasetId = feature.get('datasetId') as string;
       if (!datasetGroups.has(datasetId)) {
@@ -80,23 +91,13 @@ export function useMarkerClustering({
       datasetGroups.get(datasetId)!.push(feature);
     });
 
-    console.log(`📊 ${ datasetGroups.size }개 데이터셋으로 분리`);
+    console.log(`📊 ${ datasetGroups.size }개 데이터셋으로 클러스터 분리`);
 
     // 각 데이터셋별로 클러스터 레이어 생성
     datasetGroups.forEach((datasetFeatures, datasetId) => {
-      const datasetSource = new VectorSource({
-        features: datasetFeatures,
-      });
-
-      const clusterSource = new Cluster({
-        source: datasetSource,
-        distance: 30,
-      });
-
-      const clusterLayer = new VectorLayer({
-        source: clusterSource,
-        style: createClusterStyle,
-      });
+      const datasetSource = new VectorSource({ features: datasetFeatures });
+      const clusterSource = new Cluster({ source: datasetSource, distance: 30 });
+      const clusterLayer = new VectorLayer({ source: clusterSource, style: createClusterStyle });
 
       datasetLayersRef.current.set(datasetId, {
         source: datasetSource,
@@ -108,146 +109,108 @@ export function useMarkerClustering({
       console.log(`✅ 데이터셋 ${ datasetId } 클러스터 레이어 추가 (${ datasetFeatures.length }개 feature)`);
     });
 
-    console.log('✅ 모든 데이터셋 클러스터 레이어 활성화');
+    console.log('✅ 모든 클러스터 레이어 활성화');
   }, [map, vectorSource, createClusterStyle]);
 
-  // vectorSource의 feature 변경 감지 (데이터셋 on/off 시)
-  useEffect(() => {
-    if (!map || !vectorSource) {
+  // 일반 마커 레이어 생성
+  const createMarkerLayer = useCallback(() => {
+    if (!map || !vectorSource) return;
+
+    const features = vectorSource.getFeatures();
+    if (features.length === 0) {
+      console.log('🗑️  표출할 feature가 없어 마커 레이어를 생성하지 않음');
       return;
     }
 
-    // feature 변경 완료 후 실행할 타이머
-    let updateTimer: NodeJS.Timeout;
+    const normalLayer = new VectorLayer({ source: vectorSource });
+    map.addLayer(normalLayer);
 
-    const handleFeaturesChange = (event: any) => {
-      // debounce로 clear + addfeature가 연속으로 발생할 때 한 번만 실행
-      clearTimeout(updateTimer);
-      updateTimer = setTimeout(() => {
-        const currentZoomLevel = map.getView().getZoom();
-        if (currentZoomLevel === undefined) {
-          return;
-        }
+    // 마커 스타일 적용
+    features.forEach((feature) => {
+      feature.setStyle(createMarkerStyle(feature, showMarkerLabels));
+    });
 
-        const layers = map.getLayers().getArray();
-        const markerLayers = layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
+    console.log(`✅ 일반 마커 레이어 활성화 (${ features.length }개 feature)`);
+  }, [map, vectorSource, createMarkerStyle, showMarkerLabels]);
 
-        if (currentZoomLevel > 11) {
-          // 일반 마커 모드
-          console.log('🔄 vectorSource 변경 감지 - 일반 마커 레이어 확인');
+  // 핵심: 현재 상태에 맞게 레이어 동기화
+  const syncLayersWithCurrentState = useCallback(() => {
+    if (!map || !vectorSource) return;
 
-          // 기존 레이어 확인
-          if (markerLayers.length > 0) {
-            const firstLayer = markerLayers[0];
-            const currentSource = firstLayer.getSource();
-            const isClusterMode = currentSource instanceof Cluster;
+    const zoom = map.getView().getZoom();
+    if (zoom === undefined) return;
 
-            console.log(`🔍 기존 레이어 모드: ${ isClusterMode ? '클러스터' : '일반' }`);
+    const features = vectorSource.getFeatures();
+    const markerLayers = getMarkerLayers();
 
-            if (isClusterMode) {
-              // 클러스터 레이어가 있으면 제거하고 일반 레이어로 전환
-              console.log('🔄 클러스터 레이어 제거 후 일반 레이어로 전환');
-              markerLayers.forEach((layer) => map.removeLayer(layer));
-              datasetLayersRef.current.clear();
+    // 목표 상태 결정
+    const shouldShowCluster = zoom <= CLUSTER_ZOOM_THRESHOLD && features.length > 0;
+    const shouldShowMarker = zoom > CLUSTER_ZOOM_THRESHOLD && features.length > 0;
+    const shouldShowNothing = features.length === 0;
 
-              const normalLayer = new VectorLayer({
-                source: vectorSource,
-              });
-              map.addLayer(normalLayer);
-              console.log('✅ 일반 마커 레이어 활성화');
-            } else {
-              console.log('✅ 이미 일반 레이어 - 업데이트 스킵');
-            }
-            // 이미 일반 레이어면 아무것도 안 함 (vectorSource가 자동으로 업데이트됨)
-          } else {
-            // 레이어가 없으면 새로 생성
-            const normalLayer = new VectorLayer({
-              source: vectorSource,
-            });
-            map.addLayer(normalLayer);
-          }
-        } else {
-          // 클러스터 모드
-          console.log('🔄 vectorSource 변경 감지 - 클러스터 레이어 재생성');
-          rebuildClusterLayers();
-        }
+    // 현재 상태 확인
+    const hasLayers = markerLayers.length > 0;
+    const isCurrentlyCluster = hasLayers && markerLayers[0].getSource() instanceof Cluster;
+    const isCurrentlyMarker = hasLayers && !(markerLayers[0].getSource() instanceof Cluster);
+
+    console.log(`🔄 레이어 동기화: 줌=${ zoom.toFixed(1) }, features=${ features.length }, 목표=${ shouldShowCluster ? '클러스터' : shouldShowMarker ? '마커' : '없음' }, 현재=${ isCurrentlyCluster ? '클러스터' : isCurrentlyMarker ? '마커' : '없음' }`);
+
+    // 상태 전환 로직
+    if (shouldShowCluster && !isCurrentlyCluster) {
+      // 클러스터 모드로 전환
+      console.log('→ 클러스터 모드로 전환');
+      removeAllMarkerLayers();
+      createClusterLayers();
+    } else if (shouldShowMarker && !isCurrentlyMarker) {
+      // 일반 마커 모드로 전환
+      console.log('→ 일반 마커 모드로 전환');
+      removeAllMarkerLayers();
+      createMarkerLayer();
+    } else if (shouldShowNothing && hasLayers) {
+      // 레이어 제거
+      console.log('→ 모든 레이어 제거');
+      removeAllMarkerLayers();
+    } else if (shouldShowCluster && isCurrentlyCluster) {
+      // 이미 클러스터 모드 - 데이터 변경 시 재생성
+      console.log('→ 클러스터 레이어 재생성');
+      removeAllMarkerLayers();
+      createClusterLayers();
+    } else {
+      console.log('→ 상태 변경 없음');
+    }
+  }, [map, vectorSource, getMarkerLayers, removeAllMarkerLayers, createClusterLayers, createMarkerLayer]);
+
+  // vectorSource 변경 감지 (debounced)
+  useEffect(() => {
+    if (!map || !vectorSource) return;
+
+    const handleFeaturesChange = () => {
+      clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = setTimeout(() => {
+        console.log('🔔 vectorSource 변경 감지');
+        syncLayersWithCurrentState();
       }, 100);
     };
 
-    // vectorSource의 변경 이벤트 리스너 등록
-    // clear 이벤트도 포함하여 모든 변경사항 감지
     vectorSource.on('addfeature', handleFeaturesChange);
     vectorSource.on('removefeature', handleFeaturesChange);
     vectorSource.on('clear', handleFeaturesChange);
 
     return () => {
-      clearTimeout(updateTimer);
+      clearTimeout(syncTimerRef.current);
       vectorSource.un('addfeature', handleFeaturesChange);
       vectorSource.un('removefeature', handleFeaturesChange);
       vectorSource.un('clear', handleFeaturesChange);
     };
-  }, [map, vectorSource, rebuildClusterLayers]);
+  }, [map, vectorSource, syncLayersWithCurrentState]);
 
-  // 줌 레벨에 따른 클러스터/일반 레이어 전환
+  // 줌 레벨 변경 시 레이어 동기화
   useEffect(() => {
     if (!map || !vectorSource) return;
 
-    console.log(`🔄 줌 레벨 ${ currentZoom }: 레이어 전환 확인`);
-
-    const layers = map.getLayers().getArray();
-    const markerLayers = layers.filter((layer) => layer instanceof VectorLayer && layer !== layers[0]) as VectorLayer<VectorSource | Cluster>[];
-
-    if (markerLayers.length === 0) {
-      // 레이어가 없는 경우: vectorSource에 feature가 있으면 레이어 생성
-      const features = vectorSource.getFeatures();
-      if (features.length > 0) {
-        console.log('⚠️  레이어가 없지만 feature 존재 - 레이어 생성');
-        if (currentZoom <= 11) {
-          // 클러스터 모드
-          rebuildClusterLayers();
-        } else {
-          // 일반 마커 모드
-          const normalLayer = new VectorLayer({
-            source: vectorSource,
-          });
-          map.addLayer(normalLayer);
-        }
-      } else {
-      }
-      return;
-    }
-
-    const firstLayer = markerLayers[0];
-    const currentSource = firstLayer.getSource();
-    const isClusterMode = currentSource instanceof Cluster;
-
-    if (currentZoom <= 11 && !isClusterMode) {
-      // 클러스터 모드로 전환
-      console.log('🔄 데이터셋별 클러스터 모드로 전환');
-      rebuildClusterLayers();
-    } else if (currentZoom > 11 && isClusterMode) {
-      // 일반 모드로 전환
-      console.log('🔄 일반 마커 모드로 전환');
-
-      // 기존 클러스터 레이어 제거
-      markerLayers.forEach((layer) => map.removeLayer(layer));
-      datasetLayersRef.current.clear();
-
-      // 단일 일반 레이어로 복원
-      const normalLayer = new VectorLayer({
-        source: vectorSource,
-      });
-
-      map.addLayer(normalLayer);
-      console.log('✅ 일반 마커 레이어 활성화');
-
-      // 기존 마커들의 스타일 다시 적용
-      const features = vectorSource.getFeatures();
-      features.forEach((feature) => {
-        feature.setStyle(createMarkerStyle(feature, showMarkerLabels));
-      });
-    }
-  }, [map, vectorSource, currentZoom, createMarkerStyle, showMarkerLabels, rebuildClusterLayers]);
+    console.log(`🔍 줌 레벨 변경: ${ currentZoom }`);
+    syncLayersWithCurrentState();
+  }, [map, vectorSource, currentZoom, syncLayersWithCurrentState]);
 
   return {
     currentZoom,
