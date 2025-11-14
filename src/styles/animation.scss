@@ -190,7 +190,9 @@ $delays: (
     width: 0;
     background: linear-gradient(to right, #ff9447, #ed6e13);
     border-radius: inherit;
-    animation: expandWidth $progress-duration linear forwards;
+    animation: expandWidth $progress-duration ease-out forwards;
+    will-change: width;
+    backface-visibility: hidden;
   }
 
   &.paused::before {
