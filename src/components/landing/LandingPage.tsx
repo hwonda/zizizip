@@ -59,6 +59,8 @@ export default function LandingPage() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [dragState, setDragState] = useState({ isDragging: false, startX: 0, currentX: 0, startTime: 0 });
+  const [wasPlayingBeforeDrag, setWasPlayingBeforeDrag] = useState(true);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -105,6 +107,76 @@ export default function LandingPage() {
     router.push('/map');
   };
 
+  const handleDragStart = (clientX: number) => {
+    setDragState({
+      isDragging: true,
+      startX: clientX,
+      currentX: clientX,
+      startTime: Date.now(),
+    });
+    setWasPlayingBeforeDrag(isPlaying);
+    setIsPlaying(false);
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!dragState.isDragging) return;
+    setDragState((prev) => ({ ...prev, currentX: clientX }));
+  };
+
+  const handleDragEnd = () => {
+    if (!dragState.isDragging) return;
+
+    const deltaX = dragState.currentX - dragState.startX;
+    const deltaTime = Date.now() - dragState.startTime;
+    const velocity = Math.abs(deltaX) / deltaTime;
+
+    const FLICK_THRESHOLD = 0.5;
+
+    if (velocity > FLICK_THRESHOLD) {
+      if (deltaX > 0) {
+        handlePrev();
+      } else {
+        handleNext();
+      }
+    }
+
+    setDragState({ isDragging: false, startX: 0, currentX: 0, startTime: 0 });
+
+    if (wasPlayingBeforeDrag) {
+      setIsPlaying(true);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleDragStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    handleDragMove(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleDragStart(e.clientX);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleDragMove(e.clientX);
+  };
+
+  const handleMouseUp = () => {
+    handleDragEnd();
+  };
+
+  const handleMouseLeave = () => {
+    if (dragState.isDragging) {
+      handleDragEnd();
+    }
+  };
+
   return (
     <div className='min-h-screen flex flex-col bg-gradient-to-br from-[#fafafa] to-[#f5f5f5] overflow-hidden'>
       <header className='absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] p-8 z-10 backdrop-blur-md'>
@@ -119,11 +191,23 @@ export default function LandingPage() {
 
       <main className='flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-8 max-w-[800px] mx-auto w-full'>
         <div className='relative w-full mb-12'>
-          <div className='relative w-full min-h-[520px] sm:h-[620px]'>
+          <div
+            className='relative w-full min-h-[520px] sm:h-[620px] cursor-grab active:cursor-grabbing'
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+          >
             {cards.map((card, index) => {
               const isActive = index === currentIndex;
               const isPrev = index === (currentIndex - 1 + cards.length) % cards.length;
               const isNext = index === (currentIndex + 1) % cards.length;
+
+              const dragOffset = dragState.isDragging && isActive ? dragState.currentX - dragState.startX : 0;
+              const dragProgress = dragOffset / (typeof window !== 'undefined' ? window.innerWidth : 1000);
 
               let transformClass = '';
               let opacityClass = '';
@@ -147,15 +231,31 @@ export default function LandingPage() {
                 zIndexClass = 'z-10';
               }
 
+              const inlineTransform = isActive && dragState.isDragging
+                ? `translateX(${ dragOffset }px) scale(1) translateZ(0)`
+                : isActive
+                  ? 'translateX(0) scale(1) translateZ(0)'
+                  : isPrev || isNext
+                    ? 'translateZ(-100px)'
+                    : 'translateZ(-200px)';
+
+              const inlineOpacity = isActive && dragState.isDragging
+                ? 1 - Math.abs(dragProgress) * 0.3
+                : undefined;
+
               return (
                 <div
                   key={card.id}
                   className={`
-                    absolute w-full h-full bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] 
-                    transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden 
+                    absolute w-full h-full bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)]
+                    overflow-hidden
                     ${ transformClass } ${ opacityClass } ${ zIndexClass } ${ !isActive ? 'pointer-events-none' : '' }
+                    ${ dragState.isDragging && isActive ? '' : 'transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)]' }
                   `}
-                  style={{ transform: `${ transformClass } translateZ(${ isActive ? '0' : isPrev || isNext ? '-100px' : '-200px' })` }}
+                  style={{
+                    transform: inlineTransform,
+                    opacity: inlineOpacity,
+                  }}
                 >
                   <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]' />
                   <div className='px-4 py-12 sm:p-8 h-full flex flex-col gap-3'>
