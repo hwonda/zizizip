@@ -192,7 +192,7 @@ export default function LandingPage() {
       <main className='flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-8 max-w-[800px] mx-auto w-full'>
         <div className='relative w-full mb-12'>
           <div
-            className='relative w-full min-h-[520px] sm:h-[620px] cursor-grab active:cursor-grabbing'
+            className='relative w-full min-h-[420px] sm:h-[620px] cursor-grab active:cursor-grabbing'
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -258,17 +258,17 @@ export default function LandingPage() {
                   }}
                 >
                   <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]' />
-                  <div className='px-4 py-12 sm:p-8 h-full flex flex-col gap-3'>
-                    <h2 className='text-xl font-bold text-main m-0'>
+                  <div className='px-4 py-6 sm:px-4 sm:py-12 sm:p-8 h-full flex flex-col gap-1.5 sm:gap-3'>
+                    <h2 className='text-base sm:text-xl font-bold text-main m-0'>
                       {card.title}
                     </h2>
-                    <h3 className='text-lg font-bold text-primary m-0 leading-relaxed'>
+                    <h3 className='text-base sm:text-lg font-bold text-primary m-0 leading-relaxed'>
                       {card.subtitle}
                     </h3>
                     <div className='bg-gray-10 rounded-2xl my-1 border border-gray-9'>
                       <Image src={card.imageSrc} alt={card.title} width="688" height="386" className='rounded-2xl h-full' />
                     </div>
-                    <div className='text-base leading-[1.8] text-sub'>
+                    <div className='text-sm sm:text-base leading-[1.8] text-sub'>
                       {card.description}
                     </div>
                   </div>
@@ -331,28 +331,28 @@ export default function LandingPage() {
         </div>
 
         <button
-          className='group w-full pl-2 py-5 text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
+          className='group w-full pl-2 py-5 text-base sm:text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
             border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)]
-            mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
+            mt-8 sm:mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
           onClick={handleStartClick}
         >
           <span>{'지금 시작하기'}</span>
-          <ArrowBigRight className='w-6 h-6 animate-slide-arrow' />
+          <ArrowBigRight className='size-4 sm:size-6 animate-slide-arrow' />
         </button>
 
         <div className='flex gap-4 mt-6 justify-center'>
           <button
-            className='flex items-center gap-2 px-5 py-3 text-[0.95rem] font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
+            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
             onClick={handleHideToday}
           >
-            <CalendarCheck className='w-6 h-6' />
+            <CalendarCheck className='size-4 sm:size-6' />
             <span>{'오늘은 그만 보기'}</span>
           </button>
           <button
-            className='flex items-center gap-2 px-5 py-3 text-[0.95rem] font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
+            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
             onClick={handleNeverShow}
           >
-            <Trash2 className='w-6 h-6' />
+            <Trash2 className='size-4 sm:size-6' />
             <span>{'다시 보지 않기'}</span>
           </button>
         </div>
