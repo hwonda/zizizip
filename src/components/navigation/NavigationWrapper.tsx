@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ExtendedLocationData } from '@/types';
 import Logo from '@/components/icons/Logo';
 import UploadSidebar from '@/components/navigation/UploadSidebar';
+import LHSidebar from '@/components/navigation/LHSidebar';
 import Tabs from '@/components/ui/Tabs';
 
 interface NavigationWrapperProps {
@@ -26,6 +27,7 @@ export default function NavigationWrapper({
   onDataUploaded,
 }: NavigationWrapperProps) {
   const router = useRouter();
+  const [lhData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>('업로드');
   const tabs: TabType[] = ['업로드', 'LH', 'SH', 'GH'];
 
@@ -58,9 +60,7 @@ export default function NavigationWrapper({
           <UploadSidebar onDataUploaded={onDataUploaded} />
         )}
         {activeTab === 'LH' && (
-          <div className="w-full bg-background rounded-lg shadow-lg p-4">
-            <p className="text-gray-3">{'LH 공고 내용을 준비 중입니다.'}</p>
-          </div>
+          <LHSidebar />
         )}
         {activeTab === 'SH' && (
           <div className="w-full bg-background rounded-lg shadow-lg p-4">
@@ -80,6 +80,9 @@ export default function NavigationWrapper({
           onToggleDebugInfo={onToggleDebugInfo}
           /> */}
       </div>
+      <span className="text-xs text-gray-1 bg-gray-10">
+        {JSON.stringify(lhData?.[1]?.dsList)}
+      </span>
     </>
   );
 }
