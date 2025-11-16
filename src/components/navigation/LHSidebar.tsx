@@ -7,7 +7,7 @@ export default function LHSidebar() {
   const { data, isLoading, error } = useLHQuery();
   const { selectedLH, toggleSelection, isSelected, selectAll, clearSelections } = usePublicHousingStore();
 
-  const notices = data?.response?.body || [];
+  const notices = data?.dsList || [];
 
   const handleSelectAll = () => {
     if (selectedLH.size === notices.length) {
