@@ -5,6 +5,7 @@ import { siteMetadata } from '@/constants/metadata';
 import GoogleAnalytics from '@/constants/GoogleAnalytics';
 import MicrosoftClarity from '@/constants/MicrosoftClarity';
 import StructuredData from '@/constants/StructuredData';
+import NaverSiteVerification from '@/constants/NaverSiteVerification';
 import '@/styles/globals.scss';
 
 const geistSans = Geist({
@@ -90,6 +91,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <StructuredData />
         <GoogleAnalytics />
+        <NaverSiteVerification />
         <MicrosoftClarity />
       </head>
       <body
