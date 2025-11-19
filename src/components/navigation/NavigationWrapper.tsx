@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+// import { useState } from 'react';
 // import DebugSidebar from '@/components/navigation/DebugSidebar';
 import { ExtendedLocationData } from '@/types';
 import Logo from '@/components/icons/Logo';
 import UploadSidebar from '@/components/navigation/UploadSidebar';
-import LHSidebar from '@/components/navigation/LHSidebar';
-import Tabs from '@/components/ui/Tabs';
+// import LHSidebar from '@/components/navigation/LHSidebar';
+// import Tabs from '@/components/ui/Tabs';
 
 interface NavigationWrapperProps {
   showAllMarkers: boolean;
@@ -17,7 +17,7 @@ interface NavigationWrapperProps {
   onDataUploaded: (data: ExtendedLocationData[])=> void;
 }
 
-type TabType = '업로드' | 'LH' | 'SH' | 'GH';
+// type TabType = '업로드' | 'LH' | 'SH' | 'GH';
 
 export default function NavigationWrapper({
   // showAllMarkers,
@@ -27,9 +27,9 @@ export default function NavigationWrapper({
   onDataUploaded,
 }: NavigationWrapperProps) {
   const router = useRouter();
-  const [lhData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('업로드');
-  const tabs: TabType[] = ['업로드', 'LH', 'SH', 'GH'];
+  // const [lhData] = useState<any>(null);
+  // const [activeTab, setActiveTab] = useState<TabType>('업로드');
+  // const tabs: TabType[] = ['업로드', 'LH', 'SH', 'GH'];
 
   return (
     <>
