@@ -48,14 +48,15 @@ export default function NavigationWrapper({
           </button>
         </header>
 
-        {/* 탭 메뉴 */}
-        <Tabs
+        {/* 업로드 영역만 활성화 */}
+        <UploadSidebar onDataUploaded={onDataUploaded} />
+
+        {/* 탭 임시 비활성화 */}
+        {/* <Tabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
-
-        {/* 탭별 컨텐츠 */}
         {activeTab === '업로드' && (
           <UploadSidebar onDataUploaded={onDataUploaded} />
         )}
@@ -71,7 +72,7 @@ export default function NavigationWrapper({
           <div className="w-full bg-background rounded-lg shadow-lg p-4">
             <p className="text-gray-3">{'GH 공고 내용을 준비 중입니다.'}</p>
           </div>
-        )}
+        )} */}
 
         {/* <DebugSidebar
           showAllMarkers={showAllMarkers}
@@ -80,9 +81,9 @@ export default function NavigationWrapper({
           onToggleDebugInfo={onToggleDebugInfo}
           /> */}
       </div>
-      <span className="text-xs text-gray-1 bg-gray-10">
+      {/* <span className="text-xs text-gray-1 bg-gray-10">
         {JSON.stringify(lhData?.[1]?.dsList)}
-      </span>
+      </span> */}
     </>
   );
 }
