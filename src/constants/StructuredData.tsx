@@ -1,9 +1,12 @@
+import Script from 'next/script';
 import { siteMetadata } from '@/constants/metadata';
 
 export default function StructuredData() {
   return (
-    <script
-      type='application/ld+json'
+    <Script
+      id="structured-data"
+      type="application/ld+json"
+      strategy="afterInteractive"
       dangerouslySetInnerHTML={{
         __html: JSON.stringify({
           '@context': 'https://schema.org',

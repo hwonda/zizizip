@@ -1,9 +1,12 @@
+import Script from 'next/script';
+
 const MicrosoftClarity = () => {
   const clarityTagId = 'tlb69mw5qd';
 
   return (
-    <script
-      type="text/javascript"
+    <Script
+      id="microsoft-clarity"
+      strategy="afterInteractive"
       dangerouslySetInnerHTML={{
         __html: `
           (function(c,l,a,r,i,t,y){

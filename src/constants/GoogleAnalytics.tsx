@@ -1,14 +1,19 @@
+import Script from 'next/script';
+
 const GoogleAnalytics = () => {
   const googleAnalyticsId = 'G-B7VLCCP4SH';
   const googleAnalyticsSrc = `https://www.googletagmanager.com/gtag/js?id=${ googleAnalyticsId }`;
 
   return (
     <>
-      <script
-        async
+      <Script
+        id="google-analytics-src"
         src={googleAnalyticsSrc}
+        strategy="afterInteractive"
       />
-      <script
+      <Script
+        id="google-analytics-init"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
