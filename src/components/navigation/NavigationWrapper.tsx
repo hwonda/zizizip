@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-// import { useState } from 'react';
+import { useState } from 'react';
 // import DebugSidebar from '@/components/navigation/DebugSidebar';
 import { ExtendedLocationData } from '@/types';
 import Logo from '@/components/icons/Logo';
 import UploadSidebar from '@/components/navigation/UploadSidebar';
-// import LHSidebar from '@/components/navigation/LHSidebar';
-// import Tabs from '@/components/ui/Tabs';
+import LHSidebar from '@/components/navigation/LHSidebar';
+import Tabs from '@/components/ui/Tabs';
 
 interface NavigationWrapperProps {
   showAllMarkers: boolean;
@@ -17,7 +17,7 @@ interface NavigationWrapperProps {
   onDataUploaded: (data: ExtendedLocationData[])=> void;
 }
 
-// type TabType = '업로드' | 'LH' | 'SH' | 'GH';
+type TabType = '업로드' | 'LH' | 'SH' | 'GH';
 
 export default function NavigationWrapper({
   // showAllMarkers,
@@ -27,9 +27,9 @@ export default function NavigationWrapper({
   onDataUploaded,
 }: NavigationWrapperProps) {
   const router = useRouter();
-  // const [lhData] = useState<any>(null);
-  // const [activeTab, setActiveTab] = useState<TabType>('업로드');
-  // const tabs: TabType[] = ['업로드', 'LH', 'SH', 'GH'];
+  const [lhData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('업로드');
+  const tabs: TabType[] = ['업로드', 'LH', 'SH', 'GH'];
 
   return (
     <>
@@ -49,10 +49,10 @@ export default function NavigationWrapper({
         </header>
 
         {/* 업로드 영역만 활성화 */}
-        <UploadSidebar onDataUploaded={onDataUploaded} />
+        {/* <UploadSidebar onDataUploaded={onDataUploaded} /> */}
 
         {/* 탭 임시 비활성화 */}
-        {/* <Tabs
+        <Tabs
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -72,7 +72,7 @@ export default function NavigationWrapper({
           <div className="w-full bg-background rounded-lg shadow-lg p-4">
             <p className="text-gray-3">{'GH 공고 내용을 준비 중입니다.'}</p>
           </div>
-        )} */}
+        )}
 
         {/* <DebugSidebar
           showAllMarkers={showAllMarkers}
@@ -81,9 +81,9 @@ export default function NavigationWrapper({
           onToggleDebugInfo={onToggleDebugInfo}
           /> */}
       </div>
-      {/* <span className="text-xs text-gray-1 bg-gray-10">
+      <span className="text-xs text-gray-1 bg-gray-10">
         {JSON.stringify(lhData?.[1]?.dsList)}
-      </span> */}
+      </span>
     </>
   );
 }

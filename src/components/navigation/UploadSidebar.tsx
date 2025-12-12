@@ -301,7 +301,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   };
 
   return (
-    <div className="h-full bg-background/90 transition p-2 rounded-lg shadow-xl">
+    <div className="h-full bg-background/90 transition p-2 rounded-lg shadow-xl z-10">
       <h2 className="sr-only">{'엑셀(CSV, Excel) 파일 업로드'}</h2>
 
       {/* 파일 업로드 영역 */}
@@ -444,20 +444,19 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                 >
                   <div className="flex items-start justify-between">
                     <label className="flex flex-col cursor-pointer flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-start gap-2">
                         <input
                           type="checkbox"
                           checked={selected}
                           onChange={() => handleDatasetToggle(dataset.id)}
                           className="h-4 w-4 text-primary rounded focus:ring-primary"
                         />
-                        <div className="flex flex-1 items-center gap-1">
+                        <div className="flex flex-1 items-start gap-1">
                           <MapPinIcon
                             color={dataset.color}
                             size={16}
-                            className="shrink-0"
                           />
-                          <span className="font-medium text-sm text-gray-1 w-[164px] truncate line-clamp-1">
+                          <span className="font-medium text-sm text-gray-1 w-[164px] mt-[-2px]">
                             {dataset.name}
                           </span>
                         </div>
@@ -469,7 +468,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-
+                      {/*
                       <div className="flex-1 ml-6">
                         {stats && (
                           <div className="mt-1 text-xs text-sub">
@@ -485,7 +484,7 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
                             minute: '2-digit',
                           })}
                         </div>
-                      </div>
+                      </div> */}
                     </label>
                   </div>
                 </div>
