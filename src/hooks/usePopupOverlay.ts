@@ -35,7 +35,6 @@ export function usePopupOverlay({ map, selectedLocationGroup }: UsePopupOverlayP
 
     map.addOverlay(popup);
     overlayRef.current = popup;
-    console.log('팝업 오버레이 생성 완료, ID:', popup.get('id'));
 
     return () => {
       if (overlayRef.current) {
@@ -50,7 +49,6 @@ export function usePopupOverlay({ map, selectedLocationGroup }: UsePopupOverlayP
     if (!map || !overlayRef.current) return;
 
     if (selectedLocationGroup && selectedLocationGroup.lon && selectedLocationGroup.lat) {
-      console.log(`팝업 위치 설정: [${ selectedLocationGroup.lon }, ${ selectedLocationGroup.lat }]`);
       const coordinates = fromLonLat([selectedLocationGroup.lon, selectedLocationGroup.lat]);
       overlayRef.current.setPosition(coordinates);
 

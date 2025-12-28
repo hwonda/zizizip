@@ -65,7 +65,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   useEffect(() => {
     if (onDataUploaded) {
       const selectedData = getSelectedData();
-      console.log('데이터셋 상태 변화 감지, 지도 업데이트:', selectedData.length);
       onDataUploaded(selectedData);
       window.dispatchEvent(new CustomEvent('locationDataUpdated', { detail: selectedData }));
     }
@@ -73,7 +72,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
   // 파일 업로드 함수
   const uploadFile = async (formData: FormData, fileName: string) => {
-    console.log('파일 업로드 시작');
     setLoadingStage('parsing');
     setProgress(30);
 
@@ -82,7 +80,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     setAbortController(controller);
 
     try {
-      console.log('API 요청 전송 중...');
       setLoadingStage('geocoding');
       setProgress(50);
 
@@ -97,18 +94,13 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         throw new Error(`서버 오류 (${ response.status }): 업로드에 실패했습니다.`);
       }
 
-      console.log('API 응답 수신 완료, 데이터 파싱 중...');
       setProgress(80);
 
       const data: UploadResponse = await response.json();
-      console.log(`API 응답 성공 여부: ${ data.success }, 데이터 항목 수: ${ data.data?.length || 0 }`);
 
       if (data.data) {
-        console.log('첫 번째 데이터 항목:', data.data[0]);
-
         // 좌표 데이터가 있는지 확인
         const validLocations = data.data.filter((loc) => loc.lat && loc.lon);
-        console.log(`유효한 좌표가 있는 위치 데이터: ${ validLocations.length }/${ data.data.length }`);
       }
 
       if (data.success && data.data) {
@@ -125,7 +117,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
 
         // 새로운 데이터셋 추가 (파일명에서 확장자 제거하여 데이터셋 이름으로 사용)
         const datasetName = fileName.replace('.csv', '');
-        console.log(`새 데이터셋 추가: ${ datasetName }, 유효 데이터: ${ validationResult.validCount }/${ data.data.length }`);
         addDataset(data.data, datasetName);
 
         setProgress(100);
@@ -144,7 +135,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
     } catch (err) {
       // AbortError는 사용자가 취소한 경우이므로 별도 처리
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log('업로드가 사용자에 의해 취소되었습니다.');
         setError('업로드가 취소되었습니다.');
       } else {
         const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
@@ -158,7 +148,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
         setLoadingStage(null);
         setProgress(0);
       }, 500);
-      console.log('파일 업로드 과정 완료');
     }
   };
 
@@ -296,7 +285,6 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
   const handleCancelUpload = () => {
     if (abortController) {
       abortController.abort();
-      console.log('업로드 취소 요청');
     }
   };
 

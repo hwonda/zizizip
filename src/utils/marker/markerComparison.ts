@@ -10,10 +10,7 @@ export function locationsChanged(
   newLocations: ExtendedLocationData[],
   prevLocations: ExtendedLocationData[],
 ): boolean {
-  console.log(`🔍 데이터 변경 확인: 새로운 ${ newLocations.length }개 vs 이전 ${ prevLocations.length }개`);
-
   if (newLocations.length !== prevLocations.length) {
-    console.log('✅ 배열 길이가 다름 → 변경됨');
     return true;
   }
 
@@ -27,6 +24,5 @@ export function locationsChanged(
       || newLoc.datasetId !== prevLoc.datasetId;
   });
 
-  console.log(`🔍 내용 비교 결과: ${ hasChanged ? '변경됨' : '변경되지 않음' }`);
   return hasChanged;
 }

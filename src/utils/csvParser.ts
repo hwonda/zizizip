@@ -28,8 +28,6 @@ export function findHeaderRowIndex(rows: string[][]): number {
       return trimmed && addressColumns.some((addrCol) => trimmed.includes(addrCol));
     });
 
-    console.log(`Row ${ i }: hasName=${ hasNameColumn }, hasAddress=${ hasAddressColumn }`, row.slice(0, 10));
-
     if (hasNameColumn && hasAddressColumn) {
       return i;
     }

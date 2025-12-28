@@ -19,18 +19,13 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
 
   // 선택된 데이터셋들의 데이터를 로드하는 함수
   const loadSelectedData = useCallback(() => {
-    console.log('선택된 데이터셋 로드 시도 중...');
     try {
       const selectedData = getSelectedData();
-      console.log(`선택된 데이터 항목 수: ${ selectedData.length }`);
 
       // 좌표 데이터 검증
       const validLocations = selectedData.filter((loc) => loc.lat && loc.lon);
-      console.log(`유효한 좌표가 있는 위치 데이터: ${ validLocations.length }/${ selectedData.length }`);
 
-      if (validLocations.length > 0) {
-        console.log('첫 번째 유효한 위치 데이터:', validLocations[0]);
-      } else if (selectedData.length > 0) {
+      if (selectedData.length > 0 && validLocations.length === 0) {
         console.warn('유효한 좌표가 있는 위치 데이터가 없습니다!');
       }
 
@@ -49,10 +44,8 @@ export default function MapContainer({ children, onDataUploaded }: MapContainerP
 
     // 위치 데이터 업데이트 이벤트 리스너 추가
     const handleLocationDataUpdated = (event: Event) => {
-      console.log('위치 데이터 업데이트 이벤트 수신');
       const customEvent = event as CustomEvent<ExtendedLocationData[]>;
       if (customEvent.detail) {
-        console.log('새 위치 데이터:', customEvent.detail);
         onDataUploaded(customEvent.detail);
       } else {
         loadSelectedData(); // 이벤트에 데이터가 없으면 다시 로드

@@ -122,11 +122,8 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
   const cachedResult = geocodeCache.get<{ lat: number; lon: number }>(cacheKey);
 
   if (cachedResult) {
-    console.log(`[캐시 히트] ${ address } => (${ cachedResult.lat }, ${ cachedResult.lon })`);
     return cachedResult;
   }
-
-  console.log(`[API 호출] 지오코딩 시작: ${ address }`);
 
   // 레이트 리밋 체크
   if (!checkRateLimit()) {
@@ -136,7 +133,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
 
   // 주소 정제
   const refinedAddress = refineAddress(address);
-  console.log(`정제된 주소: ${ refinedAddress }`);
 
   try {
     // VWorld API 키
@@ -146,8 +142,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
       throw new Error('VWORLD_API_KEY is not defined in environment variables');
     }
 
-    console.log(`API 키 확인: ${ apiKey.substring(0, 3) }...`);
-
     // 지번 주소인지 확인 (동, 가 등의 키워드와 번지 형식 확인)
     const isJibunAddress = /([가-힣]+(동|가|리))\s+\d+(-\d+)?($|\s)/.test(refinedAddress)
                           || /([가-힣]+(동|가|리))\s+\d+번지/.test(refinedAddress);
@@ -156,8 +150,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
     // 도로명 주소와 지번 주소 모두 처리하기 위해 먼저 지번 주소로 시도
     const addressType = isJibunAddress ? 'PARCEL' : 'ROAD';
     const url = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ addressType }&key=${ apiKey }`;
-
-    console.log(`API 요청 URL: ${ url } (주소 타입: ${ addressType })`);
 
     let response = await fetch(url);
     if (!response.ok) {
@@ -169,13 +161,9 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
 
     // 첫 번째 시도가 실패하면 다른 주소 타입으로 다시 시도
     if (data.response.status !== 'OK' || !data.response.result) {
-      console.log(`${ addressType } 주소 타입으로 변환 실패, 다른 타입으로 재시도합니다`);
-
       // 주소 타입 변경 (PARCEL -> ROAD 또는 ROAD -> PARCEL)
       const alternativeType = addressType === 'PARCEL' ? 'ROAD' : 'PARCEL';
       const alternativeUrl = `https://api.vworld.kr/req/address?service=address&request=getCoord&version=2.0&crs=epsg:4326&address=${ encodeURIComponent(refinedAddress) }&refine=true&simple=false&format=json&type=${ alternativeType }&key=${ apiKey }`;
-
-      console.log(`대체 API 요청 URL: ${ alternativeUrl } (주소 타입: ${ alternativeType })`);
 
       response = await fetch(alternativeUrl);
       if (!response.ok) {
@@ -184,19 +172,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
       }
 
       data = await response.json();
-    }
-    console.log('API 응답 데이터:', JSON.stringify(data).substring(0, 200) + '...');
-
-    // 응답 구조 상세 디버깅
-    if (data && data.response && data.response.status === 'OK') {
-      console.log('OK 응답 상세 구조:', JSON.stringify({
-        hasResult: !!data.response.result,
-        hasPoint: data.response.result && data.response.result.point,
-        hasItems: data.response.result && data.response.result.items,
-        itemsLength: data.response.result && data.response.result.items ? data.response.result.items.length : 0,
-        firstItem: data.response.result && data.response.result.items && data.response.result.items.length > 0
-          ? data.response.result.items[0] : null,
-      }, null, 2));
     }
 
     // 응답 구조 안전하게 확인
@@ -220,7 +195,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
     // 결과 아이템 확인 (items 대신 point가 직접 있을 수도 있음)
     if (data.response.result.point) {
       // point가 직접 있는 경우
-      console.log(`직접 point 필드 발견: ${ address }`);
       data.response.result.items = [{ point: data.response.result.point }];
     } else if (!data.response.result.items || !data.response.result.items.length) {
       console.error(`좌표 결과 아이템 없음: ${ address }`);
@@ -229,9 +203,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
 
     // 좌표 추출 (안전하게 처리)
     try {
-      // 응답 구조 상세 로깅
-      console.log('좌표 추출 시도:', JSON.stringify(data.response.result.items[0], null, 2));
-
       // 다양한 응답 구조 처리
       let point;
       const firstItem = data.response.result.items[0];
@@ -281,8 +252,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lon: numb
       }
 
       const result = { lon, lat };
-
-      console.log(`좌표 변환 성공: ${ address } => lon: ${ result.lon }, lat: ${ result.lat }`);
 
       // 결과 캐싱 (3600초 = 1시간)
       geocodeCache.set(cacheKey, result, 3600);
@@ -381,7 +350,6 @@ export async function POST(request: NextRequest) {
       const extracted = extractDataFromHeaderRow(data);
       headerRow = extracted.headerRow;
       dataRows = extracted.dataRows;
-      console.log(`헤더 row 발견: ${ extracted.headerIndex + 1 }번째 행`);
     } catch (error) {
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : '헤더를 찾을 수 없습니다' },
@@ -460,7 +428,6 @@ export async function POST(request: NextRequest) {
 
     // 여러 가격 컬럼 찾기
     const multiplePriceColumns = findMultiplePriceColumns(headers);
-    console.log('발견된 가격 컬럼들:', multiplePriceColumns);
 
     // 유틸리티 함수들
     const parseNumber = (value: string | undefined): number | undefined => {
@@ -617,8 +584,6 @@ export async function POST(request: NextRequest) {
               } else {
                 geocodingStats.apiCalls++;
               }
-
-              console.log(`✓ 지오코딩 성공 [${ i + 1 }/${ dataRows.length }] ${ isCached ? '(캐시)' : '(API)' }: ${ address }`);
             } else {
               geocodingStats.failed++;
               geocodingStats.apiCalls++; // 실패해도 API는 호출됨
@@ -678,37 +643,6 @@ export async function POST(request: NextRequest) {
           locations.push(location);
         }
       }
-    }
-
-    // 지오코딩 통계 출력
-    console.log('========================================');
-    console.log('지오코딩 통계');
-    console.log('========================================');
-    console.log(`전체 처리:    ${ geocodingStats.total }건`);
-    console.log(`성공:         ${ geocodingStats.success }건 (${ geocodingStats.total > 0 ? Math.round(geocodingStats.success / geocodingStats.total * 100) : 0 }%)`);
-    console.log(`실패:         ${ geocodingStats.failed }건 (${ geocodingStats.total > 0 ? Math.round(geocodingStats.failed / geocodingStats.total * 100) : 0 }%)`);
-    console.log(`API 호출:     ${ geocodingStats.apiCalls }건`);
-    console.log(`캐시 히트:    ${ geocodingStats.cacheHits }건 (중복 주소)`);
-    console.log(`절약된 호출:  ${ geocodingStats.cacheHits }건`);
-    console.log('========================================');
-
-    // 실패한 주소 리스트 출력
-    if (failedAddresses.length > 0) {
-      console.log('');
-      console.log('========================================');
-      console.log(`실패한 주소 목록 (${ failedAddresses.length }건)`);
-      console.log('========================================');
-      failedAddresses.forEach((item, idx) => {
-        console.log(`${ idx + 1 }. [행 ${ item.index }] ${ item.name }`);
-        console.log(`   주소: ${ item.address }`);
-        console.log(`   사유: ${ item.reason }`);
-        console.log('');
-      });
-      console.log('========================================');
-    } else {
-      console.log('');
-      console.log('✓ 모든 주소 지오코딩 성공!');
-      console.log('');
     }
 
     return NextResponse.json({

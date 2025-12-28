@@ -39,7 +39,6 @@ export function useMarkerClustering({
     const handleZoomChange = () => {
       const zoom = map.getView().getZoom();
       if (zoom !== undefined) {
-        console.log(`🔍 현재 줌 레벨: ${ zoom }`);
         setCurrentZoom(zoom);
       }
     };
@@ -68,7 +67,6 @@ export function useMarkerClustering({
     const markerLayers = getMarkerLayers();
     markerLayers.forEach((layer) => map.removeLayer(layer));
     datasetLayersRef.current.clear();
-    console.log('🗑️  모든 마커 레이어 제거');
   }, [map, getMarkerLayers]);
 
   // 클러스터 레이어 생성
@@ -77,7 +75,6 @@ export function useMarkerClustering({
 
     const features = vectorSource.getFeatures();
     if (features.length === 0) {
-      console.log('🗑️  표출할 feature가 없어 클러스터 레이어를 생성하지 않음');
       return;
     }
 
@@ -90,8 +87,6 @@ export function useMarkerClustering({
       }
       datasetGroups.get(datasetId)!.push(feature);
     });
-
-    console.log(`📊 ${ datasetGroups.size }개 데이터셋으로 클러스터 분리`);
 
     // 각 데이터셋별로 클러스터 레이어 생성
     datasetGroups.forEach((datasetFeatures, datasetId) => {
@@ -106,10 +101,7 @@ export function useMarkerClustering({
       });
 
       map.addLayer(clusterLayer);
-      console.log(`✅ 데이터셋 ${ datasetId } 클러스터 레이어 추가 (${ datasetFeatures.length }개 feature)`);
     });
-
-    console.log('✅ 모든 클러스터 레이어 활성화');
   }, [map, vectorSource, createClusterStyle]);
 
   // 일반 마커 레이어 생성
@@ -118,7 +110,6 @@ export function useMarkerClustering({
 
     const features = vectorSource.getFeatures();
     if (features.length === 0) {
-      console.log('🗑️  표출할 feature가 없어 마커 레이어를 생성하지 않음');
       return;
     }
 
@@ -129,8 +120,6 @@ export function useMarkerClustering({
     features.forEach((feature) => {
       feature.setStyle(createMarkerStyle(feature, showMarkerLabels));
     });
-
-    console.log(`✅ 일반 마커 레이어 활성화 (${ features.length }개 feature)`);
   }, [map, vectorSource, createMarkerStyle, showMarkerLabels]);
 
   // 핵심: 현재 상태에 맞게 레이어 동기화
@@ -153,30 +142,22 @@ export function useMarkerClustering({
     const isCurrentlyCluster = hasLayers && markerLayers[0].getSource() instanceof Cluster;
     const isCurrentlyMarker = hasLayers && !(markerLayers[0].getSource() instanceof Cluster);
 
-    console.log(`🔄 레이어 동기화: 줌=${ zoom.toFixed(1) }, features=${ features.length }, 목표=${ shouldShowCluster ? '클러스터' : shouldShowMarker ? '마커' : '없음' }, 현재=${ isCurrentlyCluster ? '클러스터' : isCurrentlyMarker ? '마커' : '없음' }`);
-
     // 상태 전환 로직
     if (shouldShowCluster && !isCurrentlyCluster) {
       // 클러스터 모드로 전환
-      console.log('→ 클러스터 모드로 전환');
       removeAllMarkerLayers();
       createClusterLayers();
     } else if (shouldShowMarker && !isCurrentlyMarker) {
       // 일반 마커 모드로 전환
-      console.log('→ 일반 마커 모드로 전환');
       removeAllMarkerLayers();
       createMarkerLayer();
     } else if (shouldShowNothing && hasLayers) {
       // 레이어 제거
-      console.log('→ 모든 레이어 제거');
       removeAllMarkerLayers();
     } else if (shouldShowCluster && isCurrentlyCluster) {
       // 이미 클러스터 모드 - 데이터 변경 시 재생성
-      console.log('→ 클러스터 레이어 재생성');
       removeAllMarkerLayers();
       createClusterLayers();
-    } else {
-      console.log('→ 상태 변경 없음');
     }
   }, [map, vectorSource, getMarkerLayers, removeAllMarkerLayers, createClusterLayers, createMarkerLayer]);
 
@@ -187,7 +168,6 @@ export function useMarkerClustering({
     const handleFeaturesChange = () => {
       clearTimeout(syncTimerRef.current);
       syncTimerRef.current = setTimeout(() => {
-        console.log('🔔 vectorSource 변경 감지');
         syncLayersWithCurrentState();
       }, 100);
     };
@@ -208,7 +188,6 @@ export function useMarkerClustering({
   useEffect(() => {
     if (!map || !vectorSource) return;
 
-    console.log(`🔍 줌 레벨 변경: ${ currentZoom }`);
     syncLayersWithCurrentState();
   }, [map, vectorSource, currentZoom, syncLayersWithCurrentState]);
 

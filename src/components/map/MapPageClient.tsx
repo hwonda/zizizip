@@ -38,7 +38,6 @@ export default function MapPageClient() {
 
   // 데이터 업로드 핸들러 (useCallback으로 메모이제이션)
   const handleDataUploaded = useCallback((data: ExtendedLocationData[]) => {
-    console.log('MapPage에서 데이터 업로드됨:', data);
     setLocations(data);
   }, []);
 

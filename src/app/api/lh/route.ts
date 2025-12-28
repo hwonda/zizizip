@@ -24,9 +24,6 @@ export async function GET() {
 
     const apiUrl = `http://apis.data.go.kr/B552555/lhLeaseNoticeInfo1/lhLeaseNoticeInfo1?${ params.toString() }`;
 
-    console.log('[LH API] URL:', apiUrl);
-    console.log('[LH API]:', formattedDate);
-
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
@@ -35,11 +32,8 @@ export async function GET() {
 
     const data = await response.json();
 
-    console.log('[LH API] Raw data:', data);
-
     // API 응답이 배열 형태로 오므로 두 번째 요소를 반환
     if (Array.isArray(data) && data.length > 1) {
-      console.log('[LH API] dsList:', data[1].dsList);
       return NextResponse.json(data[1]);
     }
 

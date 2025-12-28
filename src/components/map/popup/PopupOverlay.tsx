@@ -35,7 +35,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
         setIsCopied(false);
       }, 2000);
     } catch (error) {
-      console.log('주소 복사에 실패했습니다:', error);
+      // 주소 복사 실패 시 무시
     }
   };
 

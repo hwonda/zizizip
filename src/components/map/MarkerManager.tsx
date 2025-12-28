@@ -55,15 +55,6 @@ export default function MarkerManager({
 
   // 마커 업데이트 (데이터가 실제로 변경되었을 때만 실행)
   useEffect(() => {
-    console.log('마커 업데이트 useEffect 실행됨');
-    console.log('전달받은 props:', {
-      map: !!map,
-      vectorSource: !!vectorSource,
-      locationsLength: locations?.length || 0,
-      showAllMarkers,
-      currentZoom,
-    });
-
     if (!map || !vectorSource) {
       console.warn('지도 또는 벡터 소스가 초기화되지 않았습니다.');
       console.warn('map:', map);
@@ -75,32 +66,22 @@ export default function MarkerManager({
       // 데이터가 없으면 기존 마커만 제거
       const currentMarkerCount = vectorSource.getFeatures().length;
       if (currentMarkerCount > 0) {
-        console.log(`🗑️  빈 배열 수신, 기존 마커 ${ currentMarkerCount }개 제거`);
         vectorSource.clear();
-        console.log('✅ 마커 제거 완료');
-      } else {
-        console.log('📍 빈 배열 수신했지만 제거할 마커가 없음');
       }
       prevLocationsRef.current = [];
-      console.log('📝 prevLocationsRef 빈 배열로 업데이트됨');
       return;
     }
 
     // 데이터가 변경되지 않았으면 마커 업데이트 건너뛰기
     if (!locationsChanged(locations, prevLocationsRef.current)) {
-      console.log('위치 데이터가 변경되지 않았으므로 마커 업데이트 건너뜀');
       return;
     }
 
-    console.log(`마커 업데이트 시작: 총 ${ locations.length }개의 위치 데이터`);
-
     // 기존 마커 제거
-    console.log('기존 마커 제거 중...');
     vectorSource.clear();
 
     // 유효한 좌표가 있는 위치만 필터링
     const validLocations = locations.filter((loc) => loc.lat && loc.lon);
-    console.log(`유효한 좌표가 있는 위치: ${ validLocations.length }/${ locations.length }`);
 
     if (validLocations.length === 0) {
       console.warn('유효한 좌표가 있는 위치 데이터가 없습니다.');
@@ -110,10 +91,8 @@ export default function MarkerManager({
 
     // 좌표별로 그룹화
     const locationGroups = groupLocationsByCoordinates(validLocations);
-    console.log(`그룹화된 위치: ${ locationGroups.length }개 그룹`);
 
     // 마커 추가 (그룹별로)
-    console.log('마커 추가 중...');
     locationGroups.forEach((group, index) => {
       try {
         const coordinates = fromLonLat([group.lon, group.lat]);
@@ -141,8 +120,6 @@ export default function MarkerManager({
       }
     });
 
-    console.log(`마커 추가 완료: ${ vectorSource.getFeatures().length }개`);
-
     // 지도 뷰 조정 (첫 로딩 시에만)
     if (validLocations.length > 0 && prevLocationsRef.current.length === 0) {
       try {
@@ -155,7 +132,6 @@ export default function MarkerManager({
 
     // 이전 데이터 저장
     prevLocationsRef.current = [...locations];
-    console.log('마커 업데이트 완료');
   }, [map, vectorSource, locations, createMarkerStyle, showAllMarkers, showMarkerLabels, currentZoom]);
 
   // 마커 표출/숨김 토글
@@ -173,8 +149,6 @@ export default function MarkerManager({
   // 마커 라벨 표시/숨김 토글
   useEffect(() => {
     if (!vectorSource) return;
-
-    console.log(`🏷️  마커 라벨 ${ showMarkerLabels ? '표시' : '숨김' }`);
 
     // 모든 마커의 스타일 업데이트
     const features = vectorSource.getFeatures();

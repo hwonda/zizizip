@@ -55,12 +55,9 @@ export function useMarkerEvents({
     if (!map || !onMarkerClick) return;
 
     const clickHandler = (evt: any) => {
-      console.log('지도 클릭 이벤트 발생');
-
       // 팝업 요소인지 확인 (팝업 내부 클릭은 무시)
       const isPopupClick = evt.originalEvent.target.closest('.ol-popup');
       if (isPopupClick) {
-        console.log('팝업 내부 클릭 감지, 무시함');
         return;
       }
 
@@ -78,8 +75,6 @@ export function useMarkerEvents({
         const features = feature.get('features');
         if (features && features.length > 1 && currentZoom <= 11) {
           // 클러스터 클릭: 해당 영역으로 줌인
-          console.log(`클러스터 클릭됨: ${ features.length }개 그룹`);
-
           const extent = feature.getGeometry()?.getExtent();
           if (extent) {
             // 클러스터 영역으로 줌인
@@ -92,12 +87,10 @@ export function useMarkerEvents({
         } else if (features && features.length === 1) {
           // 단일 마커 (클러스터 안에 하나만 있는 경우)
           const singleFeature = features[0] as Feature;
-          console.log('단일 마커 (클러스터) 클릭됨:', singleFeature.get('name'));
           const locationGroup = singleFeature.get('locationGroup') as LocationGroup;
           onMarkerClick(locationGroup);
         } else {
           // 일반 마커 클릭
-          console.log('마커 클릭됨:', feature.get('name'));
           const locationGroup = feature.get('locationGroup') as LocationGroup;
           onMarkerClick(locationGroup);
         }

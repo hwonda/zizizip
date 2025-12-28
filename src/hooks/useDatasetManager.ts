@@ -40,7 +40,6 @@ export const useDatasetManager = () => {
 
         setDatasets(restoredDatasets);
         setSelectedIds(savedSelectedIds || []);
-        console.log(`데이터셋 로드 완료: ${ restoredDatasets.length }개`);
       }
     } catch (error) {
       console.error('데이터셋 로드 실패:', error);
@@ -60,12 +59,6 @@ export const useDatasetManager = () => {
         selectedIds: selectedIdsToSave,
       };
       sessionStorage.setItem(storageKey, JSON.stringify(dataToSave));
-      console.log(`🔄 Session Storage 저장 완료: 데이터셋 ${ datasetsToSave.length }개, 선택 ${ selectedIdsToSave.length }개`);
-
-      // 저장된 내용 확인
-      if (datasetsToSave.length === 0) {
-        console.log('✅ 빈 배열로 Session Storage 업데이트됨 (모든 데이터셋 삭제됨)');
-      }
     } catch (error) {
       console.error('데이터셋 저장 실패:', error);
     }
@@ -112,7 +105,6 @@ export const useDatasetManager = () => {
     setDatasets((prev) => [...prev, newDataset]);
     setSelectedIds((prev) => [...prev, newDataset.id]);
 
-    console.log(`새 데이터셋 추가: ${ newDataset.name } (${ data.length }개 항목), 색상: ${ newDataset.color }`);
     return newDataset.id;
   }, [datasets, getAvailableColor]);
 
@@ -127,21 +119,14 @@ export const useDatasetManager = () => {
 
   // 데이터셋 삭제
   const removeDataset = useCallback((id: string) => {
-    const datasetName = datasets.find((d) => d.id === id)?.name;
-    console.log(`데이터셋 삭제 시작: ${ datasetName }`);
-
     setDatasets((prev) => {
-      const filtered = prev.filter((dataset) => dataset.id !== id);
-      console.log(`데이터셋 배열 업데이트: ${ prev.length } -> ${ filtered.length }`);
-      return filtered;
+      return prev.filter((dataset) => dataset.id !== id);
     });
 
     setSelectedIds((prev) => {
-      const filtered = prev.filter((selectedId) => selectedId !== id);
-      console.log(`선택된 ID 배열 업데이트: ${ prev.length } -> ${ filtered.length }`);
-      return filtered;
+      return prev.filter((selectedId) => selectedId !== id);
     });
-  }, [datasets]);
+  }, []);
 
   // 데이터셋 이름 변경
   const renameDataset = useCallback((id: string, newName: string) => {
@@ -159,7 +144,6 @@ export const useDatasetManager = () => {
     setDatasets([]);
     setSelectedIds([]);
     sessionStorage.removeItem(storageKey);
-    console.log('모든 데이터셋 삭제');
   }, []);
 
   // 모든 데이터셋 선택/해제
@@ -243,7 +227,6 @@ export const useDatasetManager = () => {
     // 디버깅용 유틸리티
     debugStorage: () => {
       const saved = sessionStorage.getItem(storageKey);
-      console.log('🔍 현재 Session Storage 내용:', saved ? JSON.parse(saved) : 'null');
       return saved ? JSON.parse(saved) : null;
     },
   };
