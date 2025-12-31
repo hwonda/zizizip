@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import { Clipboard, ClipboardCheck, X } from 'lucide-react';
@@ -21,8 +21,23 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
   const [selectedUnitIndex, setSelectedUnitIndex] = useState<number>(0);
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
+  // 새로운 마커 선택 시 유닛 인덱스 리셋
+  useEffect(() => {
+    setSelectedUnitIndex(0);
+  }, [selectedLocationGroup]);
+
   // 현재 선택된 유닛 정보
   const selectedUnit = selectedLocationGroup?.units[selectedUnitIndex];
+
+  // 🔍 디버깅 로그
+  console.log('=== PopupOverlay 디버깅 ===');
+  console.log('selectedLocationGroup:', selectedLocationGroup);
+  console.log('selectedLocationGroup?.units:', selectedLocationGroup?.units);
+  console.log('selectedLocationGroup?.units?.length:', selectedLocationGroup?.units?.length);
+  console.log('selectedUnitIndex:', selectedUnitIndex);
+  console.log('selectedUnit:', selectedUnit);
+  console.log('조건 충족 (렌더링 여부):', !!(selectedLocationGroup && selectedUnit));
+  console.log('===========================');
 
   // 클립보드에 주소 복사
   const copyAddressToClipboard = async () => {
@@ -35,6 +50,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
         setIsCopied(false);
       }, 2000);
     } catch (error) {
+      console.error(error);
       // 주소 복사 실패 시 무시
     }
   };
