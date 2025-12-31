@@ -240,7 +240,7 @@ export default function LandingPage() {
                     : 'translateZ(-200px)';
 
               const inlineOpacity = isActive && dragState.isDragging
-                ? 1 - Math.abs(dragProgress) * 0.3
+                ? (1 - Math.abs(dragProgress)) * 0.3
                 : undefined;
 
               return (

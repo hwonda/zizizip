@@ -101,6 +101,10 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       if (data.data) {
         // 좌표 데이터가 있는지 확인
         const validLocations = data.data.filter((loc) => loc.lat && loc.lon);
+        if (validLocations.length === 0) {
+          setError('유효한 좌표가 없는 데이터가 있습니다.');
+          return;
+        }
       }
 
       if (data.success && data.data) {
