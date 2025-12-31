@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LocationGroup } from '@/types';
 import Map from 'ol/Map';
-import { Clipboard, ClipboardCheck, X } from 'lucide-react';
+import { Clipboard, ClipboardCheck, X, RefreshCw } from 'lucide-react';
 import { usePopupOverlay } from '@/hooks/usePopupOverlay';
 import { formatArea } from '@/utils/formatters';
 import HouseBadge from './HouseBadge';
@@ -63,7 +63,7 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
       {/* 삼각형 포인터 */}
       <div className="absolute -top-2 left-3 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-primary" />
 
-      {selectedLocationGroup && selectedUnit && (
+      {selectedLocationGroup && selectedUnit ? (
         <div className="w-100 flex flex-col gap-1.5">
           {/* 헤더 */}
           <div className="border-b border-gray-9 space-y-1 pb-1">
@@ -149,7 +149,20 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
           {/* 가격 정보 */}
           <PriceSection unit={selectedUnit} />
         </div>
-      )}
+      )
+        : (
+          <div className="w-100 flex justify-between items-center gap-1.5">
+            <p className="text-main text-sm">{'데이터를 불러올 수 없습니다. 새로고침 후 다시 이용해보세요.'}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-primary text-sm hover:text-secondary transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      }
     </div>
   );
 }
