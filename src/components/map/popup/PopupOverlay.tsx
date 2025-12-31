@@ -29,16 +29,6 @@ export default function PopupOverlay({ map, selectedLocationGroup, onClose }: Po
   // 현재 선택된 유닛 정보
   const selectedUnit = selectedLocationGroup?.units[selectedUnitIndex];
 
-  // 🔍 디버깅 로그
-  console.log('=== PopupOverlay 디버깅 ===');
-  console.log('selectedLocationGroup:', selectedLocationGroup);
-  console.log('selectedLocationGroup?.units:', selectedLocationGroup?.units);
-  console.log('selectedLocationGroup?.units?.length:', selectedLocationGroup?.units?.length);
-  console.log('selectedUnitIndex:', selectedUnitIndex);
-  console.log('selectedUnit:', selectedUnit);
-  console.log('조건 충족 (렌더링 여부):', !!(selectedLocationGroup && selectedUnit));
-  console.log('===========================');
-
   // 클립보드에 주소 복사
   const copyAddressToClipboard = async () => {
     if (!selectedLocationGroup?.address) return;
