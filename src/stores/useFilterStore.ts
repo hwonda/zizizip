@@ -71,10 +71,10 @@ export interface FilterState {
 
 // 기본 슬라이더 범위 상수
 export const SLIDER_DEFAULTS = {
-  exclusiveArea: { min: 1, max: 100 }, // ㎡, 100은 100 이상 의미
-  deposit: { min: 0, max: 1000000000 }, // 만원 (0~10억, 5천 단위)
-  monthly: { min: 0, max: 2000000 }, // 만원 (0~200만원, 10 단위)
-  sale: { min: 0, max: 2000000000 }, // 만원 (0~20억, 1억 단위)
+  exclusiveArea: { min: 0, max: 100 }, // ㎡, 100은 100 이상 의미
+  deposit: { min: 0, max: 500000000 }, // 원 (0~5억+)
+  monthly: { min: 0, max: 2000000 }, // 원 (0~200만원)
+  sale: { min: 0, max: 1000000000 }, // 원 (0~10억+)
 };
 
 // 모든 층수 카테고리
