@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { ExtendedLocationData, LocationGroup } from '@/types';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
@@ -14,6 +14,8 @@ import MarkerManager from '@/components/map/MarkerManager';
 import PopupOverlay from '@/components/map/popup/PopupOverlay';
 import DebugPanel from '@/components/map/DebugPanel';
 import MapControlButtons from '@/components/map/MapControlButtons';
+import { useFilterStore } from '@/stores/useFilterStore';
+import { filterLocations, extractHouseTypes } from '@/utils/filterLocations';
 // import NoticePopup from '@/components/common/NoticePopup';
 
 export default function MapPageClient() {
@@ -30,6 +32,15 @@ export default function MapPageClient() {
   const [locations, setLocations] = useState<ExtendedLocationData[]>([]);
   const [selectedLocationGroup, setSelectedLocationGroup] = useState<LocationGroup | null>(null);
 
+  // 필터 상태
+  const filterState = useFilterStore();
+  const { setAvailableHouseTypes } = filterState;
+
+  // 필터링된 위치 데이터
+  const filteredLocations = useMemo(() => {
+    return filterLocations(locations, filterState);
+  }, [locations, filterState]);
+
   // 지도 초기화 핸들러 (useCallback으로 메모이제이션)
   const handleMapInitialized = useCallback((map: Map, vectorSource: VectorSource) => {
     mapRef.current = map;
@@ -40,6 +51,14 @@ export default function MapPageClient() {
   const handleDataUploaded = useCallback((data: ExtendedLocationData[]) => {
     setLocations(data);
   }, []);
+
+  // 위치 데이터가 변경되면 주택유형 목록 업데이트
+  useEffect(() => {
+    if (locations.length > 0) {
+      const houseTypes = extractHouseTypes(locations);
+      setAvailableHouseTypes(houseTypes);
+    }
+  }, [locations, setAvailableHouseTypes]);
 
   // 공지사항 내용 정의
   // const notices = [
@@ -97,7 +116,7 @@ export default function MapPageClient() {
             <MarkerManager
               map={mapRef.current}
               vectorSource={vectorSourceRef.current}
-              locations={locations}
+              locations={filteredLocations}
               showAllMarkers={showAllMarkers}
               showMarkerLabels={showMarkerLabels}
               onMarkerClick={setSelectedLocationGroup}
