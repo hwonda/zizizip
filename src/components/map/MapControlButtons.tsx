@@ -1,6 +1,8 @@
 'use client';
 
-import { TypeOutline, Type } from 'lucide-react';
+import { TypeOutline, Type, SlidersHorizontal } from 'lucide-react';
+import { useFilterStore } from '@/stores/useFilterStore';
+import FilterPanel from '@/components/map/filter/FilterPanel';
 
 interface MapControlButtonsProps {
   showMarkerLabels: boolean;
@@ -11,6 +13,8 @@ export default function MapControlButtons({
   showMarkerLabels,
   onToggleMarkerLabels,
 }: MapControlButtonsProps) {
+  const { isOpen, togglePanel } = useFilterStore();
+
   return (
     <div className="absolute top-5 right-5 z-50 flex flex-col gap-3">
       {/* 마커 이름 표시 토글 버튼 */}
@@ -31,7 +35,25 @@ export default function MapControlButtons({
         </span>
       </button>
 
-      {/* 맵 버튼 추가 예정 */}
+      {/* 필터 버튼 */}
+      <div className="relative">
+        <button
+          data-filter-button
+          onClick={togglePanel}
+          className={`flex items-center gap-1 p-2 rounded-lg shadow-lg hover:scale-98 active:scale-94 ${
+            isOpen ? 'bg-primary text-white' : 'bg-background text-main'
+          }`}
+          title="필터"
+        >
+          <SlidersHorizontal className="size-4" />
+          <span className="text-sm font-medium whitespace-nowrap">
+            {'필터'}
+          </span>
+        </button>
+
+        {/* 필터 패널 */}
+        <FilterPanel />
+      </div>
     </div>
   );
 }
