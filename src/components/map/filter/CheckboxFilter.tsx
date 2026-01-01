@@ -24,7 +24,7 @@ const CheckboxFilter = ({
   const noneSelected = options.every((opt) => !selectedValues.has(opt.value));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-main">{label}</label>
         {onSelectAll && (

@@ -20,7 +20,7 @@ export default function MapControlButtons({
       {/* 마커 이름 표시 토글 버튼 */}
       <button
         onClick={onToggleMarkerLabels}
-        className={`flex items-center gap-1 p-2 rounded-lg shadow-lg hover:scale-98 active:scale-94 ${
+        className={`w-20 flex items-center gap-1 p-2 rounded-lg shadow-lg hover:scale-98 active:scale-94 ${
           showMarkerLabels ? 'bg-primary text-white' : 'bg-background text-main'
         }`}
         title={showMarkerLabels ? '마커 이름 숨기기' : '마커 이름 표시'}
@@ -30,7 +30,7 @@ export default function MapControlButtons({
         ) : (
           <Type className="size-4" />
         )}
-        <span className="text-sm font-medium whitespace-nowrap">
+        <span className="w-12 text-sm font-medium whitespace-nowrap">
           {'주택명'}
         </span>
       </button>
@@ -40,13 +40,13 @@ export default function MapControlButtons({
         <button
           data-filter-button
           onClick={togglePanel}
-          className={`flex items-center gap-1 p-2 rounded-lg shadow-lg hover:scale-98 active:scale-94 ${
+          className={`w-20 flex items-center gap-1 p-2 rounded-lg shadow-lg hover:scale-98 active:scale-94 ${
             isOpen ? 'bg-primary text-white' : 'bg-background text-main'
           }`}
           title="필터"
         >
           <SlidersHorizontal className="size-4" />
-          <span className="text-sm font-medium whitespace-nowrap">
+          <span className="w-12 text-sm font-medium whitespace-nowrap">
             {'필터'}
           </span>
         </button>

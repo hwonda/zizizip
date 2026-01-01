@@ -35,9 +35,9 @@ const SALE_VALUES = [0, 100000000, 200000000, 300000000, 500000000, 700000000, 1
 // 층수 옵션
 const FLOOR_OPTIONS = [
   { value: '1층', label: '1층' },
-  { value: '저층', label: '저층(2~5)' },
-  { value: '중층', label: '중층(6~8)' },
-  { value: '고층', label: '고층(9~)' },
+  { value: '저층', label: '저층(2~5층)' },
+  { value: '중층', label: '중층(6~8층)' },
+  { value: '고층', label: '고층(9층 이상)' },
 ];
 
 // 방 수 옵션
@@ -210,12 +210,11 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
   return (
     <div
       ref={panelRef}
-      className={`absolute top-5 z-50 bg-background rounded-xl shadow-xl border border-gray-8 overflow-hidden ${ className }`}
-      style={{ width: '320px', right: 'calc(100% - 2rem)' }}
+      className={`absolute top-0 right-24 w-[320px] z-50 bg-background rounded-xl shadow-xl border border-gray-8 overflow-hidden ${ className }`}
     >
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-8 bg-gray-10">
-        <h3 className="font-bold text-main">{'필터'}</h3>
+        <h3 className="font-bold text-main">{'주택 필터'}</h3>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -242,7 +241,7 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
       </div>
 
       {/* 필터 컨텐츠 */}
-      <div className="p-4 space-y-5 overflow-y-auto" style={{ maxHeight: '800px' }}>
+      <div className="flex flex-col gap-2 p-4 overflow-y-auto max-h-[800px]">
         {/* 1. 주택유형 */}
         {availableHouseTypes.length > 0 && (
           <CheckboxFilter
@@ -282,7 +281,7 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
 
         {/* 5. 전용면적 */}
         <SliderFilter
-          label="전용면적 (㎡)"
+          label="전용면적(㎡)"
           displayLevels={EXCLUSIVE_AREA_LEVELS}
           range={exclusiveAreaRange}
           onRangeChange={handleExclusiveAreaChange}
@@ -298,7 +297,7 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
 
         {/* 7. 월세 */}
         <SliderFilter
-          label="월세 (만원)"
+          label="월세(만원)"
           displayLevels={MONTHLY_LEVELS}
           range={monthlyRange}
           onRangeChange={handleMonthlyChange}

@@ -54,9 +54,9 @@ const SliderFilter = ({ label, displayLevels, range, onRangeChange }: SliderFilt
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <label className="text-sm font-medium text-main">{label}</label>
-      <div className="px-2 pb-4">
+      <div className="px-2">
         <BaseSlider
           value={sliderValue}
           onChange={handleChange}

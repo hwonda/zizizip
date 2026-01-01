@@ -19,7 +19,7 @@ const RadioFilter = ({
   onChange,
 }: RadioFilterProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <label className="text-sm font-medium text-main">{label}</label>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
