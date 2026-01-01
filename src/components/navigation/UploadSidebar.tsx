@@ -13,6 +13,7 @@ import {
   validateDuplicateFile,
   validateCSVContent,
   validateUploadLimit,
+  cleanupWorker,
 } from '@/utils/fileValidation';
 
 // LoadingDots 컴포넌트
@@ -69,6 +70,13 @@ export default function UploadSidebar({ onDataUploaded }: UploadSidebarProps) {
       window.dispatchEvent(new CustomEvent('locationDataUpdated', { detail: selectedData }));
     }
   }, [datasets, selectedIds, getSelectedData, onDataUploaded]);
+
+  // 컴포넌트 언마운트 시 Worker 정리
+  useEffect(() => {
+    return () => {
+      cleanupWorker();
+    };
+  }, []);
 
   // 파일 업로드 함수
   const uploadFile = async (formData: FormData, fileName: string) => {

@@ -1,5 +1,5 @@
 import { LocationData } from '@/types';
-import { findHeaderRowIndex } from './csvParser';
+import type { WorkerMessage, WorkerResponse } from '@/workers/fileParser.worker';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -141,67 +141,89 @@ export const validateDuplicateFile = (
   return null;
 };
 
+// Worker 인스턴스 캐싱
+let workerInstance: Worker | null = null;
+
 /**
- * CSV 또는 Excel 파일 내용을 미리 검증합니다.
+ * Worker 인스턴스를 가져옵니다 (싱글톤 패턴)
+ */
+const getWorker = (): Worker => {
+  if (!workerInstance) {
+    workerInstance = new Worker(
+      new URL('@/workers/fileParser.worker.ts', import.meta.url),
+    );
+  }
+  return workerInstance;
+};
+
+/**
+ * Worker를 정리합니다 (페이지 언로드 시 호출)
+ */
+export const cleanupWorker = (): void => {
+  if (workerInstance) {
+    workerInstance.terminate();
+    workerInstance = null;
+  }
+};
+
+/**
+ * CSV 또는 Excel 파일 내용을 Web Worker에서 비동기로 검증합니다.
+ * 메인 스레드를 블로킹하지 않습니다.
  */
 export const validateCSVContent = async (file: File): Promise<string | null> => {
-  try {
-    const isCSV = file.name.endsWith('.csv');
-    const isXLSX = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+  return new Promise((resolve) => {
+    try {
+      const worker = getWorker();
 
-    let data: string[][] = [];
+      // 타임아웃 설정 (30초)
+      const timeoutId = setTimeout(() => {
+        resolve('파일 처리 시간이 초과되었습니다.');
+      }, 30000);
 
-    if (isCSV) {
-      // CSV 파일 처리
-      const text = await file.text();
-      const lines = text.split('\n').filter((line) => line.trim());
+      // Worker 응답 핸들러
+      const handleMessage = (event: MessageEvent<WorkerResponse>) => {
+        clearTimeout(timeoutId);
+        worker.removeEventListener('message', handleMessage);
+        worker.removeEventListener('error', handleError);
 
-      if (lines.length === 0) {
-        return '파일이 비어있습니다.';
-      }
+        const { type, payload } = event.data;
 
-      // CSV를 2차원 배열로 변환 (간단한 파싱)
-      data = lines.map((line) => line.split(',').map((cell) => cell.trim()));
-    } else if (isXLSX) {
-      // Excel 파일 처리
-      const arrayBuffer = await file.arrayBuffer();
-      const XLSX = await import('xlsx');
+        if (type === 'PARSE_ERROR') {
+          resolve(payload.error || '파일 처리 중 오류가 발생했습니다.');
+        } else {
+          resolve(null); // 성공
+        }
+      };
 
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+      // Worker 에러 핸들러
+      const handleError = () => {
+        clearTimeout(timeoutId);
+        worker.removeEventListener('message', handleMessage);
+        worker.removeEventListener('error', handleError);
+        resolve('파일 처리 중 오류가 발생했습니다.');
+      };
 
-      data = XLSX.utils.sheet_to_json(worksheet, {
-        header: 1,
-        defval: '',
-        raw: false,
-      }) as string[][];
+      worker.addEventListener('message', handleMessage);
+      worker.addEventListener('error', handleError);
 
-      data = data.filter((row) => row.some((cell) => cell && cell.toString().trim()));
-    } else {
-      return '지원하지 않는 파일 형식입니다.';
+      // 파일을 ArrayBuffer로 변환하여 Worker에 전송
+      file.arrayBuffer().then((arrayBuffer) => {
+        const message: WorkerMessage = {
+          type: 'PARSE_FILE',
+          payload: {
+            arrayBuffer,
+            fileName: file.name,
+          },
+        };
+        worker.postMessage(message, [arrayBuffer]); // Transferable로 전송
+      }).catch(() => {
+        clearTimeout(timeoutId);
+        resolve('파일을 읽을 수 없습니다.');
+      });
+    } catch {
+      resolve('파일을 읽을 수 없습니다.');
     }
-
-    if (data.length === 0) {
-      return '파일이 비어있습니다.';
-    }
-
-    // csvParser 유틸리티로 헤더 row 찾기
-    const headerIndex = findHeaderRowIndex(data);
-
-    if (headerIndex === -1) {
-      return '유효한 헤더를 찾을 수 없습니다. \'이름\'과 \'주소\' 컬럼이 포함된 행이 필요합니다.';
-    }
-
-    // 헤더 이후 데이터가 있는지 확인
-    if (headerIndex >= data.length - 1) {
-      return '헤더만 있고 데이터가 없습니다.';
-    }
-
-    return null;
-  } catch {
-    return '파일을 읽을 수 없습니다.';
-  }
+  });
 };
 
 /**
