@@ -190,6 +190,33 @@ export default function LandingPage() {
       </header>
 
       <main className='flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-8 max-w-[720px] mx-auto w-full'>
+        <button
+          className='group w-full pl-2 py-5 text-base sm:text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
+            border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)]
+            mt-8 sm:mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
+          onClick={handleStartClick}
+        >
+          <span>{'지금 시작하기'}</span>
+          <ArrowBigRight className='size-4 sm:size-6 animate-slide-arrow' />
+        </button>
+
+        <div className='flex gap-4 my-4 justify-center'>
+          <button
+            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
+            onClick={handleHideToday}
+          >
+            <CalendarCheck className='size-4 sm:size-6' />
+            <span>{'오늘은 그만 보기'}</span>
+          </button>
+          <button
+            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
+            onClick={handleNeverShow}
+          >
+            <Trash2 className='size-4 sm:size-6' />
+            <span>{'다시 보지 않기'}</span>
+          </button>
+        </div>
+
         <div className='relative w-full mb-12'>
           <div
             className='relative w-full min-h-[420px] sm:h-[620px] cursor-grab active:cursor-grabbing'
@@ -328,33 +355,6 @@ export default function LandingPage() {
               />
             ))}
           </div>
-        </div>
-
-        <button
-          className='group w-full pl-2 py-5 text-base sm:text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
-            border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)]
-            mt-8 sm:mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
-          onClick={handleStartClick}
-        >
-          <span>{'지금 시작하기'}</span>
-          <ArrowBigRight className='size-4 sm:size-6 animate-slide-arrow' />
-        </button>
-
-        <div className='flex gap-4 mt-6 justify-center'>
-          <button
-            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
-            onClick={handleHideToday}
-          >
-            <CalendarCheck className='size-4 sm:size-6' />
-            <span>{'오늘은 그만 보기'}</span>
-          </button>
-          <button
-            className='flex items-center gap-2 px-5 py-3 text-sm sm:text-base font-medium text-gray-3 rounded-xl cursor-pointer transition-all duration-300 hover:text-primary active:scale-[0.98]'
-            onClick={handleNeverShow}
-          >
-            <Trash2 className='size-4 sm:size-6' />
-            <span>{'다시 보지 않기'}</span>
-          </button>
         </div>
       </main>
 
