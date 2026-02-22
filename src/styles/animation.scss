@@ -7,6 +7,7 @@ $gradient-duration: 0.5s;
 $bounce-duration: 1.5s;
 $gauge-duration: 0.8s;
 $slide-arrow-duration: 0.8s;
+$pulse-glow-duration: 2s;
 $progress-duration: 10s;
 
 // 애니메이션 지연 변수
@@ -78,6 +79,15 @@ $delays: (
   }
   50% {
     transform: translateX(3px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(254, 104, 29, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 36px rgba(254, 104, 29, 0.5);
   }
 }
 
@@ -172,9 +182,11 @@ $delays: (
 }
 
 .animate-slide-arrow {
-  .group:hover & {
-    animation: slideArrow $slide-arrow-duration ease-in-out infinite;
-  }
+  animation: slideArrow $slide-arrow-duration ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow $pulse-glow-duration ease-in-out infinite;
 }
 
 .progress-bar {

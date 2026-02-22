@@ -192,7 +192,7 @@ export default function LandingPage() {
       <main className='flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-8 max-w-[720px] mx-auto w-full'>
         <button
           className='group w-full pl-2 py-5 text-base sm:text-xl font-bold text-white bg-gradient-to-r from-[#ff9447] via-[#ed6e13] to-[#dc5b00]
-            border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_24px_rgba(254,104,29,0.3)]
+            border-none rounded-2xl cursor-pointer transition-all duration-300 flex items-center justify-center gap-3 animate-pulse-glow
             mt-8 sm:mt-16 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(254,104,29,0.4)] active:translate-y-0'
           onClick={handleStartClick}
         >
