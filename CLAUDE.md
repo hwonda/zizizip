@@ -4,7 +4,9 @@
 
 **zizizip 2.0** 전환 중. 1.0(수동 업로드+지도)은 운영 중이며, 2.0은 LH 공고 자동 수집+추천을 추가한다.
 
-현재 단계: **Phase 0 착수 전** — PoC 완료, 작업 목록 확정.
+현재 단계: **Phase 0 진행 중** — 0-1 완료, 0-2 DB 스키마 작성 완료, 0-3 착수 대기.
+
+작업 진행 시 `TODO.md`의 해당 체크박스를 완료 표시할 것.
 
 ## Repository Structure
 
@@ -20,31 +22,42 @@ zizizip/
 │   ├── workers/          # Web Worker
 │   ├── styles/           # SCSS
 │   └── constants/        # 메타데이터, 분석 태그
+├── backend/              # FastAPI 백엔드 (Phase 0~)
+│   ├── main.py           # FastAPI 앱 + CORS + 라우터
+│   ├── config.py         # 환경변수 (.env.local 매핑)
+│   ├── database.py       # Supabase 클라이언트
+│   ├── schemas.py        # Pydantic 응답 모델
+│   ├── routers/          # API 엔드포인트 (health, notices, housing)
+│   ├── sql/              # DB 마이그레이션 SQL
+│   ├── .venv/            # Python venv (.gitignore)
+│   └── .env.example
+├── api/index.py          # Vercel Python 진입점
+├── vercel.json           # Vercel 라우팅 설정
 ├── poc/                  # PoC 스크립트
 │   ├── lh_attachment_poc.py
 │   └── downloads/        # (.gitignore)
 ├── docs/                 # 기획·분석·참고 문서
-│   ├── ZIZIZIP_2.0_실행기획안.md
-│   ├── ZIZIZIP_2.0_ANALYSIS.md
-│   ├── POC_REPORT.md
-│   └── OpenAPI활용가이드_...docx
 ├── samples/              # 수동 테스트용 원본 파일
-├── TODO.md               # 작업 목록 + 문서 인덱스
+├── TODO.md               # 작업 목록 (진행 시 체크 표시)
 ├── CLAUDE.md             # 이 파일
 └── README.md             # 프로젝트 소개
 ```
 
 ## Development Commands
 
-- `npm run dev` — 개발 서버 (Turbopack, port 8253)
+- `npm run dev` — Next.js 개발 서버 (Turbopack, port 8253)
 - `npm run build` — 프로덕션 빌드
 - `npm run lint` — ESLint 검사
+- `backend/.venv/bin/uvicorn backend.main:app --reload --port 8000` — FastAPI 개발 서버
 - `python3 poc/lh_attachment_poc.py` — LH 첨부 다운로드 PoC
 
 ## Environment Variables (.env.local)
 
 - `NEXT_PUBLIC_VWORLD_API_KEY` — VWorld 지오코딩 (필수)
 - `NEXT_PUBLIC_LH_API_KEY` — LH 공고 API (필수)
+- `SUPABASE_URL` — Supabase 프로젝트 URL (필수)
+- `SUPABASE_KEY` — Supabase anon key (필수)
+- `SUPABASE_SERVICE_KEY` — Supabase service_role key (수집기 전용, 프론트 노출 금지)
 
 ## Code Style
 
