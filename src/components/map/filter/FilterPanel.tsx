@@ -19,18 +19,11 @@ interface FilterPanelProps {
   className?: string;
 }
 
-// 슬라이더 표시 레벨 상수
-const EXCLUSIVE_AREA_LEVELS = ['0', '20', '40', '60', '80', '100+'];
-const EXCLUSIVE_AREA_VALUES = [0, 20, 40, 60, 80, 100];
-
-const DEPOSIT_LEVELS = ['0', '3천', '5천', '8천', '1억', '1.5억', '2억', '2.5억', '3억', '4억', '5억+'];
-const DEPOSIT_VALUES = [0, 3000000, 5000000, 8000000, 100000000, 150000000, 200000000, 250000000, 300000000, 400000000, 500000000];
-
-const MONTHLY_LEVELS = ['0', '20', '40', '60', '80', '100', '120', '150', '200'];
-const MONTHLY_VALUES = [0, 200000, 400000, 600000, 800000, 1000000, 1200000, 1500000, 2000000];
-
-const SALE_LEVELS = ['0', '1억', '2억', '3억', '5억', '7억', '10억+'];
-const SALE_VALUES = [0, 100000000, 200000000, 300000000, 500000000, 700000000, 1000000000];
+// 슬라이더 눈금 위치 (marks)
+const AREA_MARKS = [0, 20, 40, 60, 80, 100].map((v) => ({ value: v }));
+const DEPOSIT_MARKS = [0, 5000, 10000, 50000, 100000, 200000, 300000, 500000].map((v) => ({ value: v }));
+const MONTHLY_MARKS = [0, 20, 40, 60, 80, 100, 150, 200].map((v) => ({ value: v }));
+const SALE_MARKS = [0, 10000, 20000, 30000, 50000, 70000, 100000].map((v) => ({ value: v }));
 
 // 층수 옵션
 const FLOOR_OPTIONS = [
@@ -54,17 +47,24 @@ const ELEVATOR_OPTIONS = [
   { value: 'no', label: '없음' },
 ];
 
-// 값을 인덱스로 변환하는 헬퍼 함수
-function valueToIndex(value: number, values: number[]): number {
-  for (let i = values.length - 1; i >= 0; i--) {
-    if (value >= values[i]) return i;
+// 금액 포맷 유틸
+function formatWon(value: number): string {
+  if (value >= 100000000) {
+    const eok = value / 100000000;
+    return eok % 1 === 0 ? `${ eok }억` : `${ eok.toFixed(1) }억`;
   }
-  return 0;
+  if (value >= 10000) {
+    const man = value / 10000;
+    return man % 1 === 0 ? `${ man }만` : `${ man.toFixed(0) }만`;
+  }
+  if (value === 0) return '0';
+  return `${ value }`;
 }
 
-// 인덱스를 값으로 변환하는 헬퍼 함수
-function indexToValue(index: number, values: number[]): number {
-  return values[Math.min(index, values.length - 1)];
+// 만원 단위 포맷
+function formatMan(value: number): string {
+  if (value === 0) return '0';
+  return `${ value }만`;
 }
 
 export default function FilterPanel({ className = '' }: FilterPanelProps) {
@@ -100,7 +100,6 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        // 필터 버튼 클릭은 제외 (버튼에 data-filter-button 속성 추가 필요)
         const target = event.target as HTMLElement;
         if (target.closest('[data-filter-button]')) return;
         setIsOpen(false);
@@ -124,55 +123,63 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
     }));
   }, [availableHouseTypes]);
 
-  // 슬라이더 범위 변환 핸들러들
+  // 슬라이더 핸들러 — store에 직접 반영
   const handleExclusiveAreaChange = useCallback((range: [number, number]) => {
-    setExclusiveArea({
-      min: indexToValue(range[0], EXCLUSIVE_AREA_VALUES),
-      max: indexToValue(range[1], EXCLUSIVE_AREA_VALUES),
-    });
+    setExclusiveArea({ min: range[0], max: range[1] });
   }, [setExclusiveArea]);
 
   const handleDepositChange = useCallback((range: [number, number]) => {
-    setDeposit({
-      min: indexToValue(range[0], DEPOSIT_VALUES),
-      max: indexToValue(range[1], DEPOSIT_VALUES),
-    });
+    setDeposit({ min: range[0] * 10000, max: range[1] * 10000 });
   }, [setDeposit]);
 
   const handleMonthlyChange = useCallback((range: [number, number]) => {
-    setMonthly({
-      min: indexToValue(range[0], MONTHLY_VALUES),
-      max: indexToValue(range[1], MONTHLY_VALUES),
-    });
+    setMonthly({ min: range[0] * 10000, max: range[1] * 10000 });
   }, [setMonthly]);
 
   const handleSaleChange = useCallback((range: [number, number]) => {
-    setSale({
-      min: indexToValue(range[0], SALE_VALUES),
-      max: indexToValue(range[1], SALE_VALUES),
-    });
+    setSale({ min: range[0] * 10000, max: range[1] * 10000 });
   }, [setSale]);
 
-  // 현재 슬라이더 범위를 인덱스로 변환
-  const exclusiveAreaRange: [number, number] = useMemo(() => [
-    valueToIndex(exclusiveArea.min, EXCLUSIVE_AREA_VALUES),
-    valueToIndex(exclusiveArea.max, EXCLUSIVE_AREA_VALUES),
-  ], [exclusiveArea]);
+  // 슬라이더 값 포맷 함수들
+  const formatExclusiveArea = useCallback((min: number, max: number) => {
+    const isMax = max >= SLIDER_DEFAULTS.exclusiveArea.max;
+    const isMin = min <= SLIDER_DEFAULTS.exclusiveArea.min;
+    if (isMin && isMax) return `${ SLIDER_DEFAULTS.exclusiveArea.max }㎡ 초과`;
+    if (isMin) return `${ max }㎡ 이하`;
+    if (isMax) return `${ min }㎡ 초과`;
+    return `${ min } ~ ${ max }㎡`;
+  }, []);
 
-  const depositRange: [number, number] = useMemo(() => [
-    valueToIndex(deposit.min, DEPOSIT_VALUES),
-    valueToIndex(deposit.max, DEPOSIT_VALUES),
-  ], [deposit]);
+  const formatDeposit = useCallback((min: number, max: number) => {
+    const realMin = min * 10000;
+    const realMax = max * 10000;
+    const isMax = realMax >= SLIDER_DEFAULTS.deposit.max;
+    const isMin = realMin <= SLIDER_DEFAULTS.deposit.min;
+    if (isMin && isMax) return `${ formatWon(SLIDER_DEFAULTS.deposit.max) } 초과`;
+    if (isMin) return `${ formatWon(realMax) } 이하`;
+    if (isMax) return `${ formatWon(realMin) } 초과`;
+    return `${ formatWon(realMin) } ~ ${ formatWon(realMax) }`;
+  }, []);
 
-  const monthlyRange: [number, number] = useMemo(() => [
-    valueToIndex(monthly.min, MONTHLY_VALUES),
-    valueToIndex(monthly.max, MONTHLY_VALUES),
-  ], [monthly]);
+  const formatMonthly = useCallback((min: number, max: number) => {
+    const isMax = max * 10000 >= SLIDER_DEFAULTS.monthly.max;
+    const isMin = min <= SLIDER_DEFAULTS.monthly.min;
+    if (isMin && isMax) return `${ formatMan(max) } 초과`;
+    if (isMin) return `${ formatMan(max) } 이하`;
+    if (isMax) return `${ formatMan(min) } 초과`;
+    return `${ formatMan(min) } ~ ${ formatMan(max) }`;
+  }, []);
 
-  const saleRange: [number, number] = useMemo(() => [
-    valueToIndex(sale.min, SALE_VALUES),
-    valueToIndex(sale.max, SALE_VALUES),
-  ], [sale]);
+  const formatSale = useCallback((min: number, max: number) => {
+    const realMin = min * 10000;
+    const realMax = max * 10000;
+    const isMax = realMax >= SLIDER_DEFAULTS.sale.max;
+    const isMin = realMin <= SLIDER_DEFAULTS.sale.min;
+    if (isMin && isMax) return `${ formatWon(SLIDER_DEFAULTS.sale.max) } 초과`;
+    if (isMin) return `${ formatWon(realMax) } 이하`;
+    if (isMax) return `${ formatWon(realMin) } 초과`;
+    return `${ formatWon(realMin) } ~ ${ formatWon(realMax) }`;
+  }, []);
 
   // 필터가 기본값인지 확인
   const isDefaultFilter = useMemo(() => {
@@ -206,6 +213,11 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
   }, [houseTypes, availableHouseTypes, floors, rooms, elevator, exclusiveArea, deposit, monthly, sale]);
 
   if (!isOpen) return null;
+
+  // store 값(원) → 슬라이더 값(만원 단위) 변환
+  const depositValue: [number, number] = [deposit.min / 10000, deposit.max / 10000];
+  const monthlyValue: [number, number] = [monthly.min / 10000, monthly.max / 10000];
+  const saleValue: [number, number] = [sale.min / 10000, sale.max / 10000];
 
   return (
     <div
@@ -279,39 +291,54 @@ export default function FilterPanel({ className = '' }: FilterPanelProps) {
           onChange={(value) => setElevator(value as ElevatorFilter)}
         />
 
-        {/* 5. 전용면적 */}
+        {/* 5. 전용면적: 0~100㎡, 1㎡ 단위 */}
         <SliderFilter
           label="전용면적(㎡)"
-          displayLevels={EXCLUSIVE_AREA_LEVELS}
-          range={exclusiveAreaRange}
-          onRangeChange={handleExclusiveAreaChange}
+          min={0}
+          max={100}
+          step={1}
+          marks={AREA_MARKS}
+          value={[exclusiveArea.min, exclusiveArea.max]}
+          onChange={handleExclusiveAreaChange}
+          formatValue={formatExclusiveArea}
         />
 
-        {/* 6. 보증금 */}
+        {/* 6. 보증금: 0~50000만원(5억), 100만원 단위 */}
         <SliderFilter
           label="보증금"
-          displayLevels={DEPOSIT_LEVELS}
-          range={depositRange}
-          onRangeChange={handleDepositChange}
+          min={0}
+          max={50000}
+          step={100}
+          marks={DEPOSIT_MARKS}
+          value={depositValue}
+          onChange={handleDepositChange}
+          formatValue={formatDeposit}
         />
 
-        {/* 7. 월세 */}
+        {/* 7. 월세: 0~200만원, 1만원 단위 */}
         <SliderFilter
-          label="월세(만원)"
-          displayLevels={MONTHLY_LEVELS}
-          range={monthlyRange}
-          onRangeChange={handleMonthlyChange}
+          label="월세"
+          min={0}
+          max={200}
+          step={1}
+          marks={MONTHLY_MARKS}
+          value={monthlyValue}
+          onChange={handleMonthlyChange}
+          formatValue={formatMonthly}
         />
 
-        {/* 8. 매매가 */}
+        {/* 8. 매매가: 0~100000만원(10억), 100만원 단위 */}
         <SliderFilter
           label="매매가"
-          displayLevels={SALE_LEVELS}
-          range={saleRange}
-          onRangeChange={handleSaleChange}
+          min={0}
+          max={100000}
+          step={100}
+          marks={SALE_MARKS}
+          value={saleValue}
+          onChange={handleSaleChange}
+          formatValue={formatSale}
         />
       </div>
     </div>
   );
 }
-
