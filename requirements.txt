@@ -1,0 +1,5 @@
+# Vercel Python 함수(api/index.py)용 의존성.
+# 로컬 개발/수집기 전체 의존성은 backend/pyproject.toml 참고.
+fastapi>=0.115.0
+supabase>=2.0.0
+python-dotenv>=1.0.0

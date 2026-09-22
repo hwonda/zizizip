@@ -6,10 +6,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.routers import health, housing, notices
 
+# Vercel rewrites /api/py/* to this app without stripping the prefix,
+# so routes and docs must carry it themselves.
+API_PREFIX = "/api/py"
+
 app = FastAPI(
     title="zizizip API",
     description="Backend API for zizizip real estate mapping application",
     version="0.1.0",
+    docs_url=f"{API_PREFIX}/docs",
+    redoc_url=f"{API_PREFIX}/redoc",
+    openapi_url=f"{API_PREFIX}/openapi.json",
 )
 
 # CORS configuration
@@ -29,6 +36,6 @@ app.add_middleware(
 )
 
 # Register routers
-app.include_router(health.router)
-app.include_router(notices.router)
-app.include_router(housing.router)
+app.include_router(health.router, prefix=API_PREFIX)
+app.include_router(notices.router, prefix=API_PREFIX)
+app.include_router(housing.router, prefix=API_PREFIX)

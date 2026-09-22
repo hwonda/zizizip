@@ -74,7 +74,7 @@ collection_runs     수집 실행 이력 (시각, 상태, 공고·파일·처리
 ```
 
 - [x] 스키마 SQL 작성 (`backend/sql/001_schema.sql`)
-- [ ] Supabase SQL Editor에서 스키마 실행
+- [x] Supabase SQL Editor에서 스키마 실행 (7개 테이블 생성 확인)
 - [ ] rental_options: 적용 계층이 다른 가격을 자유 선택 옵션으로 취급하지 않음
 
 ### 0-3. 공고 한 건 수집 → 파싱 → 지도 연결 (수직 관통)
