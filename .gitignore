@@ -46,3 +46,8 @@ claude.md
 
 # poc downloads
 poc/downloads/
+
+# python
+backend/.venv/
+__pycache__/
+*.pyc

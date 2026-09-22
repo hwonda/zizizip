@@ -3,7 +3,7 @@
   color: var(--primary-color) !important;
   height: 6px !important;
   padding: 12px 0 !important;
-  margin-bottom: 12px !important;
+  margin-bottom: 0 !important;
 
   
   /* 트랙 (선택된 영역) */
@@ -53,16 +53,9 @@
     }
   }
 
-  /* 마크 라벨 */
+  /* 마크 라벨 (값은 타이틀 옆에 표시하므로 숨김) */
   :global(.MuiSlider-markLabel) {
-    color: var(--gray-3) !important;
-    font-size: 10px !important;
-    font-family: var(--font-suit) !important;
-    top: 28px !important;
-
-    &:global(.MuiSlider-markLabelActive) {
-      color: var(--text-main-color) !important;
-    }
+    display: none !important;
   }
 
   /* 값 라벨 (툴팁) */
